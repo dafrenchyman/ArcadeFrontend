@@ -1,0 +1,14 @@
+<Project Sdk="Godot.NET.Sdk/4.4.1">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="config.json" />
+    <Content Include="config_example.json" />
+    <Content Include="default.nix" />
+    <Content Include="LICENSE" />
+    <Content Include="nixos_runner.sh" />
+    <Content Include="README.md" />
+  </ItemGroup>
+</Project>

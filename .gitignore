@@ -14,3 +14,16 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Nixos-specific ignores
+result
+fhs-env
+
+# IDE-specific ignores
+.idea
+.vscode
+ArcadeFrontend.sln.DotSettings.user
+
+# Project-specific ignores
+ArcadeFrontend.x86_64
+config.json

@@ -1,0 +1,40 @@
+[gd_scene load_steps=4 format=3 uid="uid://flyyuwcm11jd"]
+
+[ext_resource type="Script" uid="uid://w2tcgxpkseac" path="res://WheelArc.cs" id="1_0e48y"]
+[ext_resource type="Script" uid="uid://eafmutsekrn5" path="res://TopLayer.cs" id="1_epypp"]
+[ext_resource type="Script" uid="uid://b4n5sscblw51b" path="res://Background.cs" id="4_0hol4"]
+
+[node name="TopLayer" type="Node2D"]
+script = ExtResource("1_epypp")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="WheelArc" type="Control" parent="CanvasLayer/Control"]
+z_index = 100
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+script = ExtResource("1_0e48y")
+
+[node name="Background" type="Control" parent="CanvasLayer/Control"]
+z_index = -1000
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_0hol4")
