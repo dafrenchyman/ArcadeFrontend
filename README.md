@@ -18,7 +18,7 @@ This will most likely change, but using Godot:
   - `Root Type` should be a  `Control` node and make sure it's *Anchor* spans the `Full Rect`.
   - Do whatever you want in that node.
     - GD Script works, but security implications may not be ideal.
-    - Try to do everything via anchors: Will hopefully then work
+    - Try to do everything via anchors: This __should__ let themes scale to other resolutions. 
   - Currently only tested in 1080p, other resolutions may not scale correctly (for now).
   - Don't need to do anything in GD Script, this [example theme](https://mrsharky.com/ArcadeFrontend/donkey_kong_country.pck) was all animated and done via Godot's editor.
 
