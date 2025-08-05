@@ -13,6 +13,19 @@ public partial class TopLayer : Node2D
 		Console.Write("World!");
 	}
 	
+	public override void _Ready()
+	{
+		GetTree().Root.SizeChanged += OnRootViewportSizeChanged;
+	}
+
+	private void OnRootViewportSizeChanged()
+	{
+		GD.Print("Window size changed!");
+		var wheelArc = GetNode<WheelArc>("CanvasLayer/Control/WheelArc");
+		wheelArc.WindowResized();
+		GD.Print($"New size: {GetTree().Root.Size}");
+	}
+	
 	public override void _Notification(int what)
 	{
 		if (what == WM_FOCUS_OUT)

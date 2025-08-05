@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 using ArcadeFrontend;
 using Environment = System.Environment;
 
@@ -26,7 +27,6 @@ public partial class WheelArc : Control
 	private Tween _pulseTween;
 	private Vector2 _sizePriorToPulse;
 	private Node2D _pivot;
-	private List<TextureRect> _textures = new();
 	private Dictionary<int, Node2D> _arcPoints = new Dictionary<int, Node2D>();
 	private MenuItems _menuItems;
 
@@ -49,9 +49,7 @@ public partial class WheelArc : Control
 		_pulseTween.TweenProperty(textureNode, "scale", _sizePriorToPulse, 0.5f).SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.InOut);
 		
 	}
-
 	
-
 	private Tween StopPulse()
 	{
 		if (_pulseTween != null)
@@ -512,4 +510,35 @@ public partial class WheelArc : Control
 		var texture = ImageTexture.CreateFromImage(image);
 		return texture;
 	}
+
+	
+
+	public void WindowResized()
+	{
+		// Call your layout update or repositioning code here
+		// Re-Set globals
+		_totalItemsInDirection = this._numItems + this._extraItems;
+		_screenSize = GetViewport().GetVisibleRect().Size;
+			
+		// Calculate the new center for the center of the wheel
+		var screenHeight = Size.Y;
+		float radius = (screenHeight / 2.0f) / Convert.ToSingle(Math.Sin(_arcRadians / 2.0f));
+		float xOffset = radius * Convert.ToSingle(Math.Cos(_arcRadians / 2.0f));
+		_pivot.Position = new Vector2(xOffset, screenHeight / 2.0f);
+		
+		// Set the elements at the correct distance
+		foreach (KeyValuePair<int, Node2D> entry in this._arcPoints)
+		{
+			Vector2 offset = this._GenerateOffset(entry.Key);
+			entry.Value.Position = offset;
+		}
+		
+		SpinWheel(0, this._pivot, _numItems);
+		
+
+		var background = GetNode<Background>("../Background");
+		background.RestartTheme();
+	}
+	
+	
 }

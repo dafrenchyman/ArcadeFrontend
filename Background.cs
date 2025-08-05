@@ -3,8 +3,8 @@ using System;
 
 public partial class Background : Control
 {
-	
-	private Node _currentThemeInstance;
+	private PackedScene _scene;
+	private Control _currentThemeInstance;
 	private ColorRect _fadeRect;
 	
 	public override void _Ready()
@@ -46,6 +46,17 @@ public partial class Background : Control
 			GD.PrintErr("Failed to load .pck file.");
 		}
 	}
+
+	public void RestartTheme()
+	{
+		RemoveChild(_currentThemeInstance);
+		_currentThemeInstance.QueueFree();
+		_currentThemeInstance = _scene.Instantiate<Control>();
+		_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		//_currentThemeInstance.Size = GetViewport().GetVisibleRect().Size;
+		AddChild(_currentThemeInstance);
+		MoveChild(_currentThemeInstance, 0); // Put it behind everything else
+	}
 	
 	public async void ChangeTheme(string pckPath, string tscnPath)
 	{
@@ -77,7 +88,12 @@ public partial class Background : Control
 			return;
 		}
 
-		_currentThemeInstance = scene.Instantiate();
+		_scene = scene;
+		
+		_currentThemeInstance = _scene.Instantiate<Control>();
+		_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		//_currentThemeInstance.Size = GetViewport().GetVisibleRect().Size;
+		//_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(_currentThemeInstance);
 		MoveChild(_currentThemeInstance, 0); // Put it behind everything else
 
