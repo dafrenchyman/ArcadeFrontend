@@ -240,7 +240,7 @@ public partial class WheelArc : Control
 				var background = GetNode<Background>("../Background");
 
 				// Call theme switch
-				MenuItemData menuItem = _menuItems.getMenuItem(_currIndex);
+				MenuItemData menuItem = _menuItems.getMenuItem(-_currIndex);
 				background.ChangeTheme(menuItem.ThemePck, menuItem.ThemeFile);
 				
 			}));
@@ -535,7 +535,6 @@ public partial class WheelArc : Control
 		
 		SpinWheel(0, this._pivot, _numItems);
 		
-
 		var background = GetNode<Background>("../Background");
 		background.RestartTheme();
 	}
