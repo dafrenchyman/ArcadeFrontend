@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ArcadeFrontend;
 
 public class MenuItemData
@@ -7,4 +9,5 @@ public class MenuItemData
 	public string ThemePck;
 	public string ThemeFile;
 	public string LaunchCommand;
+	public List<MenuItemData> Items;
 }

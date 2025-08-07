@@ -18,7 +18,7 @@ public partial class WheelArc : Control
 	private Timer _inactivityTimer;
 	
 	private int _currIndex = 0;
-	private float _itemScaleRatio = 0.5f;
+	private float _itemScaleRatio = 0.8f;
 	private float _itemRotationRatio = 5.0f;
 	private float _itemPerHeight = 10.0f;
 	private float _rotationDuration = 0.2f;

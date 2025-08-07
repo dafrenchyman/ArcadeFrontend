@@ -27,7 +27,14 @@ public class MenuItems
         var settings = configLoader.settings;
 
         // Access the array
-        JsonElement gameList = settings["Games"];
+        JsonElement gameList = settings["Items"];
+        _menuItems = _processMenuItem(gameList);
+        GD.Print("Menu Loaded");
+    }
+
+    private List<MenuItemData> _processMenuItem(JsonElement gameList)
+    {
+        List<MenuItemData> menuItems = new List<MenuItemData>();
         foreach (JsonElement item in gameList.EnumerateArray())
         {
             string name = item.GetProperty("Name").ToString();
@@ -42,8 +49,15 @@ public class MenuItems
             menuItem.ThemePck = theme_pck;
             menuItem.ThemeFile = theme_file;
             menuItem.LaunchCommand = launch_command;
-            _menuItems.Add(menuItem);
+
+            if (item.TryGetProperty("Items", out JsonElement nestedItems))
+            {
+                menuItem.Items = _processMenuItem(nestedItems);
+            }
+            menuItems.Add(menuItem);
         }
+
+        return menuItems;
     }
 
     public MenuItemData getMenuItem(int index)
