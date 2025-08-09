@@ -40,7 +40,7 @@ grow_vertical = 2
 script = ExtResource("4_q6r6c")
 
 [node name="Background" type="Control" parent="CanvasLayer/Control"]
-z_index = -1000
+z_index = -2000
 z_as_relative = false
 layout_mode = 1
 anchors_preset = 15
