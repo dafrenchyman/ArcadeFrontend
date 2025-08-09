@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using ArcadeFrontend;
@@ -46,20 +47,22 @@ public partial class Menu : Control
 			GD.Print($"Running: {selectedItem.LaunchCommand}");
 			try
 			{
-				System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+				var psi = new ProcessStartInfo
 				{
 					FileName = "bash",
-					Arguments = $"-c \"{selectedItem.LaunchCommand}\"",
 					UseShellExecute = false,
 					CreateNoWindow = true,
 					RedirectStandardOutput = false,
 					RedirectStandardError = false,
-					Environment =
-					{
-						["DISPLAY"] = ":10.0",
-						["XAUTHORITY"] = System.Environment.GetEnvironmentVariable("XAUTHORITY")
-					}
-				});
+				};
+				psi.ArgumentList.Add("-c");
+				psi.ArgumentList.Add(selectedItem.LaunchCommand);
+
+				psi.Environment["DISPLAY"] = ":10.0";
+				psi.Environment["XAUTHORITY"] = System.Environment.GetEnvironmentVariable("XAUTHORITY");
+
+				Process.Start(psi);
+				
 			}
 			catch (Exception ex)
 			{
