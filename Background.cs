@@ -17,8 +17,6 @@ public partial class Background : Control
 		//_fadeRect.SetAnchorsAndMarginsPreset(LayoutPreset.FullRect);
 		AddChild(_fadeRect);
 		MoveChild(_fadeRect, GetChildCount() - 1); // Move on top
-		
-
 	}
 	
 	public void _OldReady() {

@@ -1,18 +1,40 @@
 {
-  "Games": [
+  "Name": "System Selection",
+  "ThemePck": "//ROMs/Themes/defaultSystemsTheme.pck",
+  "ThemeFile": "res://themes/defaultSystemsTheme/theme.tscn",
+  "Items": [
     {
-      "Name": "Donkey Kong Country",
-      "LogoLocation": "/ROMs/GameArtwork/Logos/DonkeyKongCountry.png",
-      "ThemePck": "//ROMs/Themes/donkey_kong_theme.pck",
-      "ThemeFile": "res://themes/donkeyKongCountry/theme.tscn",
-      "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/snes/Donkey Kong Country.sfc'"
+      "Name": "Nintendo Entertainment System",
+      "LogoLocation": "/home/mrsharky/dev/GameArtwork/Logos/nes.png",
+      "ThemePck": "//ROMs/Themes/defaultNesTheme.pck",
+      "ThemeFile": "res://themes/defaultNesTheme/theme.tscn",
+      "Items": [
+        {
+          "Name": "Super Mario Bros",
+          "LogoLocation": "/ROMs/GameArtwork/Logos/Super Mario Bros.png",
+          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/nes/Super Mario Bros.sfc'"
+        }
+      ]
     },
     {
-      "Name": "Donkey Kong Country 2 - Diddy's Kong Quest",
-      "LogoLocation": "/ROMs/GameArtwork/Logos/DonkeyKongCountry 2.png",
-      "ThemePck": "//ROMs/Themes/donkey_kong_theme.pck",
-      "ThemeFile": "res://themes/donkeyKongCountry2/theme.tscn",
-      "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/snes/Donkey Kong Country 2.sfc'"
+      "Name": "Super Nintendo",
+      "LogoLocation": "/home/mrsharky/dev/GameArtwork/Logos/snes.png",
+      "Items": [
+        {
+          "Name": "Donkey Kong Country",
+          "LogoLocation": "/ROMs/GameArtwork/Logos/DonkeyKongCountry.png",
+          "ThemePck": "//ROMs/Themes/donkey_kong_theme.pck",
+          "ThemeFile": "res://themes/donkeyKongCountry/theme.tscn",
+          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/snes/Donkey Kong Country.sfc'"
+        },
+        {
+          "Name": "Donkey Kong Country 2 - Diddy's Kong Quest",
+          "LogoLocation": "/ROMs/GameArtwork/Logos/DonkeyKongCountry 2.png",
+          "ThemePck": "//ROMs/Themes/donkey_kong_theme.pck",
+          "ThemeFile": "res://themes/donkeyKongCountry2/theme.tscn",
+          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/snes/Donkey Kong Country 2.sfc'"
+        }
+      ]
     }
   ]
 }

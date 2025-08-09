@@ -39,13 +39,15 @@ This will most likely change, but using Godot:
 - [x] Dynamic theme loading via .pck files (currently only for individual menu items)
   - [ ] Research security implications (probably terrible)
   - [ ] Animated transitions between themes
-  - [ ] Allow "fall-back" themes (if no individual game theme is available)
+  - [x] Allow "fall-back" themes (if no individual game theme is available)
+    - If you put a theme in the top of the section (before the "items") that will be used as a default 
   - [ ] Setup a website where people can share themes.
 - [x] Exit back to menu when game exits
   - Program pauses when focus is lost
 - [ ] Controller navigation (haven't tested, it "might" work?)
 - [ ] In-app settings menu
-- [ ] Sub wheel menus
+- [x] Sub wheel menus
+  - [ ] Need sub wheels to remember last location in previous wheel
 - [ ] Different resolutions - currently setup for 1080p
 - ...
 

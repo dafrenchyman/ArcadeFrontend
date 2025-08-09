@@ -28,7 +28,7 @@ public partial class WheelArc : Control
 	private Vector2 _sizePriorToPulse;
 	private Node2D _pivot;
 	private Dictionary<int, Node2D> _arcPoints = new Dictionary<int, Node2D>();
-	private MenuItems _menuItems;
+	private MenuData _menuData;
 
 	private bool _debug = false;
 	
@@ -217,6 +217,7 @@ public partial class WheelArc : Control
 		_inactivityTimer.WaitTime = 3.0f;
 		_inactivityTimer.Start();
 	}
+	
 	public void AnimateWheel(int direction, Node2D pivot, int count)
 	{
 		if (_spinningTween != null && _spinningTween.IsRunning())
@@ -240,7 +241,8 @@ public partial class WheelArc : Control
 				var background = GetNode<Background>("../Background");
 
 				// Call theme switch
-				MenuItemData menuItem = _menuItems.getMenuItem(-_currIndex);
+				var path = new MenuPath(new[] { -_currIndex });
+				MenuItemData menuItem = _menuData.GetMenuItem(path);
 				background.ChangeTheme(menuItem.ThemePck, menuItem.ThemeFile);
 				
 			}));
@@ -256,7 +258,8 @@ public partial class WheelArc : Control
 
 		// Add new item at the top/bottom
 		int index = direction * (_numItems + _extraItems) - currIndex;
-		MenuItemData menuItem = _menuItems.getMenuItem(index);
+		var path = new MenuPath(new[] { index });
+		MenuItemData menuItem = _menuData.GetMenuItem(path);
 
 		// Create node at each point along the arc
 		Vector2 offset = this._GenerateOffset(index);
@@ -312,7 +315,8 @@ public partial class WheelArc : Control
 	
 	private void RunCommandForSelectedItem()
 	{
-		var selectedItem = _menuItems.getMenuItem(_currIndex);
+		var path = new MenuPath(new[] { _currIndex });
+		var selectedItem = _menuData.GetMenuItem(path);
 		if (!string.IsNullOrEmpty(selectedItem.LaunchCommand))
 		{
 			GD.Print($"Running: {selectedItem.LaunchCommand}");
@@ -342,6 +346,7 @@ public partial class WheelArc : Control
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
+		return;
 		if (@event.IsActionPressed("ui_accept"))
 		{
 			RunCommandForSelectedItem();
@@ -396,9 +401,15 @@ public partial class WheelArc : Control
 			.SetEase(Tween.EaseType.Out)
 			.SetTrans(Tween.TransitionType.Sine);
 	}
+
+	private void _GenerateWheel()
+	{
+		
+	}
 	
 	public override void _Ready()
 	{
+		return;
 		// Set globals
 		_totalItemsInDirection = this._numItems + this._extraItems;
 		_screenSize = GetViewport().GetVisibleRect().Size;
@@ -416,7 +427,7 @@ public partial class WheelArc : Control
 		_background = GetNode<Background>("../Background");
 		
 		// Load Data
-		_menuItems = new MenuItems();
+		_menuData = new MenuData();
 		
 		// Find location of arc center
 		var screenHeight = Size.Y;
@@ -430,9 +441,11 @@ public partial class WheelArc : Control
 		_pivot.Rotation = Single.Pi; // Rotate to the middle of the screen
 		
 		// Create default items
+		MenuPath path;
 		for (int index = -_totalItemsInDirection + 1; index < _totalItemsInDirection; index++)
 		{
-			MenuItemData menuItem = _menuItems.getMenuItem(index);
+			path = new MenuPath(new[] { index });
+			MenuItemData menuItem = _menuData.GetMenuItem(path);
 		
 			Vector2 offset = this._GenerateOffset(index);
 
@@ -488,7 +501,8 @@ public partial class WheelArc : Control
 		}
 		
 		// Call theme switch
-		MenuItemData currMenuItem = _menuItems.getMenuItem(_currIndex);
+		path = new MenuPath(new[] { _currIndex });
+		MenuItemData currMenuItem = _menuData.GetMenuItem(path);
 		_background.ChangeTheme(currMenuItem.ThemePck, currMenuItem.ThemeFile);
 		
 		StartPulse();
@@ -510,7 +524,6 @@ public partial class WheelArc : Control
 		var texture = ImageTexture.CreateFromImage(image);
 		return texture;
 	}
-
 	
 
 	public void WindowResized()
