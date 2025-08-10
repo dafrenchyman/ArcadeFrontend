@@ -145,7 +145,17 @@ public class SingleWheel
 
     public void Remove()
     {
+	    _background.UnloadCurrentTheme();
+	    _background = null;
+	    _parentNode.RemoveChild(_menuNode);
 	    _menuNode.QueueFree();
+	    _pivot.QueueFree();
+	    _pivot = null;
+	    _menuNode = null;
+	    _menuData = null;
+	    //ResourceLoader.UnloadUnusedResources();
+	    GC.Collect();
+	    GC.WaitForPendingFinalizers();
     }
     
     private void OnInactivityTimeout()

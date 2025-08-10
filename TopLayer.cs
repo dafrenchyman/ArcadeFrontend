@@ -16,6 +16,14 @@ public partial class TopLayer : Node2D
 	public override void _Ready()
 	{
 		GetTree().Root.SizeChanged += OnRootViewportSizeChanged;
+		
+		// Create the action at runtime if it doesn't exist
+		if (!InputMap.HasAction("toggle_fullscreen"))
+		{
+			InputMap.AddAction("toggle_fullscreen");
+			InputMap.ActionAddEvent("toggle_fullscreen",
+				new InputEventKey { PhysicalKeycode = Key.F });
+		}
 	}
 
 	private void OnRootViewportSizeChanged()
@@ -38,5 +46,20 @@ public partial class TopLayer : Node2D
 			GD.Print("Gained focus — resuming");
 			GetTree().Paused = false;
 		}
+	}
+	
+	public override void _Input(InputEvent @event)
+	{
+		if (@event.IsActionPressed("toggle_fullscreen"))
+			ToggleFullscreen();
+	}
+
+	private void ToggleFullscreen()
+	{
+		var win = GetWindow();
+		if (win.Mode == Window.ModeEnum.Fullscreen || win.Mode == Window.ModeEnum.ExclusiveFullscreen)
+			win.Mode = Window.ModeEnum.Windowed;
+		else
+			win.Mode = Window.ModeEnum.Fullscreen;
 	}
 }

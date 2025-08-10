@@ -47,13 +47,23 @@ public partial class Background : Control
 
 	public void RestartTheme()
 	{
-		RemoveChild(_currentThemeInstance);
-		_currentThemeInstance.QueueFree();
+		UnloadCurrentTheme();
 		_currentThemeInstance = _scene.Instantiate<Control>();
 		_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		//_currentThemeInstance.Size = GetViewport().GetVisibleRect().Size;
 		AddChild(_currentThemeInstance);
 		MoveChild(_currentThemeInstance, 0); // Put it behind everything else
+	}
+
+
+	public void UnloadCurrentTheme()
+	{
+		if (_currentThemeInstance != null)
+		{
+			RemoveChild(_currentThemeInstance);
+			_currentThemeInstance.QueueFree();
+			_currentThemeInstance = null;
+		}
 	}
 	
 	public async void ChangeTheme(string pckPath, string tscnPath)
@@ -64,12 +74,7 @@ public partial class Background : Control
 		//await Fade(true);
 
 		// Remove current theme
-		if (_currentThemeInstance != null)
-		{
-			RemoveChild(_currentThemeInstance);
-			_currentThemeInstance.QueueFree();
-			_currentThemeInstance = null;
-		}
+		UnloadCurrentTheme();
 
 		// Load .pck file
 		if (!ProjectSettings.LoadResourcePack(pckPath))

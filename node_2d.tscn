@@ -1,6 +1,5 @@
-[gd_scene load_steps=5 format=3 uid="uid://flyyuwcm11jd"]
+[gd_scene load_steps=4 format=3 uid="uid://flyyuwcm11jd"]
 
-[ext_resource type="Script" uid="uid://w2tcgxpkseac" path="res://WheelArc.cs" id="1_0e48y"]
 [ext_resource type="Script" uid="uid://eafmutsekrn5" path="res://TopLayer.cs" id="1_epypp"]
 [ext_resource type="Script" uid="uid://b4n5sscblw51b" path="res://Background.cs" id="4_0hol4"]
 [ext_resource type="Script" uid="uid://bme806hvpu5qd" path="res://Menu.cs" id="4_q6r6c"]
@@ -27,7 +26,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 2
-script = ExtResource("1_0e48y")
 
 [node name="Menu" type="Control" parent="CanvasLayer/Control"]
 z_index = 100

@@ -96,6 +96,7 @@ public partial class Menu : Control
 			if (selectedItem.Items.Count > 0)
 			{
 				_currentMenu.Remove();
+				_currentMenu = null;
 				_currentMenu = _LoadLayer(_menu.GetMenuItem(_currentMenuLocation));
 				var newPath = new MenuPath(_currentMenuLocation.Indices); // copy existing indices
 				newPath.Indices.Add(0);
