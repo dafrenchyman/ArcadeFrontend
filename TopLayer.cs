@@ -29,8 +29,8 @@ public partial class TopLayer : Node2D
 	private void OnRootViewportSizeChanged()
 	{
 		GD.Print("Window size changed!");
-		var wheelArc = GetNode<WheelArc>("CanvasLayer/Control/WheelArc");
-		wheelArc.WindowResized();
+		var wheelArc = GetNode<Menu>("CanvasLayer/Control/Menu");
+		//wheelArc._currentMenu.WindowResized();
 		GD.Print($"New size: {GetTree().Root.Size}");
 	}
 	

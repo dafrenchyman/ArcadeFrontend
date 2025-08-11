@@ -11,7 +11,7 @@ public partial class Menu : Control
 	private MenuItemData _menu;
 	private MenuData _menuData;
 	private MenuPath _currentMenuLocation;
-	private SingleWheel _currentMenu;
+	public SingleWheel _currentMenu;
 
 	private Dictionary<int, MenuItemData> _menuDepth = new Dictionary<int, MenuItemData>();
 	private int _currDepth;
@@ -58,7 +58,8 @@ public partial class Menu : Control
 				psi.ArgumentList.Add("-c");
 				psi.ArgumentList.Add(selectedItem.LaunchCommand);
 
-				psi.Environment["DISPLAY"] = ":10.0";
+				// I don't think DISPLAY is needed anymore
+				//psi.Environment["DISPLAY"] = ":10.0";
 				psi.Environment["XAUTHORITY"] = System.Environment.GetEnvironmentVariable("XAUTHORITY");
 
 				Process.Start(psi);
