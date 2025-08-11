@@ -47,3 +47,25 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4_0hol4")
+
+[node name="GameName" type="Label" parent="CanvasLayer/Control"]
+z_index = 2000
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.9
+anchor_right = 0.7
+anchor_bottom = 0.95
+offset_left = -0.5
+offset_top = -14.5
+offset_right = 0.5
+offset_bottom = 14.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 60
+text = "<GameName>"
+vertical_alignment = 1
+autowrap_mode = 3

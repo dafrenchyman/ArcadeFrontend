@@ -80,67 +80,16 @@ public class SingleWheel
 		MenuPath path = null;
 		for (int index = -_totalItemsInDirection + 1; index < _totalItemsInDirection; index++)
 		{
-			path = new MenuPath(new[] { index });
-			MenuItemData menuItem = _menuData.GetMenuItem(path);
-		
-			Vector2 offset = this._GenerateOffset(index);
-
-			Node2D node = new Node2D();
-
-			_pivot.AddChild(node);
-			node.Position = offset;
-			node.GlobalRotation = 0;
-			
-			// Calculate the zindex
-			node.ZIndex = this._ZIndexMenuItem(index);
-			
-			_arcPoints[index] = node;
-			
-			// Add a temporary box with the name
-			var label = new Label();
-			if (_debug)
-			{
-				label.Text = menuItem.Name;
-				label.ZIndex = node.ZIndex + 10;
-			}
-
-			// Texture
-			var texture = LoadExternalImage(menuItem.LogoLocation);
-
-			Node2D textureNode = new Node2D();
-			Sprite2D logo = new Sprite2D();
-			logo.Texture = texture;
-			logo.Name = "Logo";
-			textureNode.AddChild(logo);
-			
-			// Scale to a uniform height on the Y-axis
-			float scaleRatio = this._scaleMenuItem(index, 0, texture.GetSize().Y);
-			textureNode.Scale = new Vector2(scaleRatio, scaleRatio);
-			
-			// Rotation
-			textureNode.Rotation = _RotateMenuItem(index, 0);
-			textureNode.Name = "TextureNode";
-			
-			// Alpha
-			textureNode.Modulate = _FadeMenuItem(index);
-			
-			node.AddChild(textureNode);
-			textureNode.AddChild(label);
-			
-			// Draw a debug dot at the node's origin
-			if (_debug)
-			{
-				var debug = new DebugDot();
-				textureNode.AddChild(debug);
-			}
+			this.AddMenuItem(index, 0);
 		}
 		
 		// Call theme switch
-		path = new MenuPath(new[] { 0 });
-		MenuItemData currMenuItem = _menuData.GetMenuItem(path);
-		_background.ChangeTheme(currMenuItem.ThemePck, currMenuItem.ThemeFile);
+		this.ThemeSwitch();
+		//path = new MenuPath(new[] { 0 });
+		//MenuItemData currMenuItem = _menuData.GetMenuItem(path);
+		//_background.ChangeTheme(currMenuItem.ThemePck, currMenuItem.ThemeFile);
 		
-		StartPulse();
+		//StartPulse();
 	}
 
     public void Remove()
@@ -278,7 +227,6 @@ public class SingleWheel
 	    node.ZIndex = this._ZIndexMenuItem(index);
 
 	    _arcPoints[index] = node;
-
 		
 	    //label.Rotation = -pivot.Transform.Rotation; // - angleRad;
 
@@ -286,13 +234,34 @@ public class SingleWheel
 	    //Texture2D texture = GD.Load<Texture2D>(menuItem.LogoLocation);
 	    var texture = LoadExternalImage(menuItem.LogoLocation);
 	    Node2D textureNode = new Node2D();
-	    Sprite2D logo = new Sprite2D();
-	    logo.Texture = texture;
-	    logo.Name = "Logo";
-	    textureNode.AddChild(logo);
+
+	    float scaleRatio = 1.0f;
+	    
+	    // If we have a logo, add it
+	    if (texture != null)
+	    {
+		    Sprite2D logo = new Sprite2D();
+		    logo.Texture = texture;	
+		    logo.Name = "Logo";
+		    textureNode.AddChild(logo);
+		    scaleRatio = this._scaleMenuItem(index, direction, texture.GetSize().Y);
+	    }
+	    else // Add text instead
+	    {
+		    var label = new Label();
+		    float desiredHeight = (_screenSize.Y / _itemPerHeight);
+		    float desiredWidth = desiredHeight * 4;
+		    label.Size = new Vector2(desiredWidth, desiredHeight);
+		    label.SetAnchorsPreset(Control.LayoutPreset.Center);
+		    label.Scale = new Vector2(3, 3);
+		    label.Text = menuItem.Name;
+		    //label.Theme.SetFontSize("","", (int) desiredHeight);
+		    label.Name = "Logo";
+		    textureNode.AddChild(label);
+		    scaleRatio = this._scaleMenuItem(index, direction, label.GetSize().Y);
+	    }
 		
 	    // Scale to a uniform height on the Y-axis
-	    float scaleRatio = this._scaleMenuItem(index, direction, texture.GetSize().Y);
 	    textureNode.Scale = new Vector2(scaleRatio, scaleRatio);
 		
 	    // Rotation
@@ -406,18 +375,30 @@ public class SingleWheel
 			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
 			
 			// Scale to a uniform height on the Y-axis
-			Vector2 textureSize = textureNode.GetNode<Sprite2D>("Logo").Texture.GetSize(); // Original texture dimensions
-			float scaleRatio = this._scaleMenuItem(index, direction, textureSize.Y);
-			var targetScale = new Vector2(scaleRatio, scaleRatio);
-				
-			var initialScale = textureNode.Scale;
-			_spinningTween.Parallel().TweenMethod(
-				Callable.From<Vector2>((value) => { textureNode.Scale = value; }),
-				initialScale,
-				targetScale,
-				_rotationDuration
-			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
-			
+			var logoNode = textureNode.GetNode<Node>("Logo");
+			float inputHeight = 100.0f;
+			if (logoNode != null) {
+				if (logoNode.GetClass() == "Sprite2D")
+				{
+					inputHeight = textureNode.GetNode<Sprite2D>("Logo").Texture.GetSize().Y;
+				}
+				else if (logoNode.GetClass() == "Label")
+				{
+					inputHeight = textureNode.GetNode<Label>("Logo").GetSize().Y;
+				}
+
+				float scaleRatio = this._scaleMenuItem(index, direction, inputHeight);
+				var targetScale = new Vector2(scaleRatio, scaleRatio);
+
+				var initialScale = textureNode.Scale;
+				_spinningTween.Parallel().TweenMethod(
+					Callable.From<Vector2>((value) => { textureNode.Scale = value; }),
+					initialScale,
+					targetScale,
+					_rotationDuration
+				).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
+			}
+
 			// Alpha channel the nodes
 			var targetAlpha = _FadeMenuItem(nextIndex);
 			var initialAlpha = textureNode.Modulate;
@@ -433,6 +414,31 @@ public class SingleWheel
 		
 		_inactivityTimer.WaitTime = 3.0f;
 		_inactivityTimer.Start();
+	}
+
+	public void ThemeSwitch()
+	{
+		var path = new MenuPath(new[] { -_currIndex });
+		MenuItemData menuItem = _menuData.GetMenuItem(path);
+			    
+		// Add item name to screen
+		Label gameNameNode = _menuNode.GetNode<Label>("../../GameName");
+		if (menuItem.Name != null)
+		{
+			gameNameNode.Text = menuItem.Name;    
+		}
+			    
+		// Call theme switch
+		if (menuItem.ThemeFile != null)
+		{
+			_background.ChangeTheme(menuItem.ThemePck, menuItem.ThemeFile);    
+		}
+		// Load a default if available
+		else if (this._menuData.ThemeFile != null) 
+		{
+			_background.ChangeTheme(this._menuData.ThemePck, this._menuData.ThemeFile);
+		}
+		StartPulse();
 	}
     
     public void AnimateWheel(int direction, Node2D pivot, int count)
@@ -453,22 +459,9 @@ public class SingleWheel
 			    {	
 				    _currIndex--;
 			    }
-			    StartPulse();
-
-			    // Call theme switch
-			    var path = new MenuPath(new[] { -_currIndex });
-			    MenuItemData menuItem = _menuData.GetMenuItem(path);
-			    if (menuItem.ThemeFile != null)
-			    {
-				    _background.ChangeTheme(menuItem.ThemePck, menuItem.ThemeFile);    
-			    }
-			    // Load a default if available
-			    else if (this._menuData.ThemeFile != null) 
-			    {
-				    _background.ChangeTheme(this._menuData.ThemePck, this._menuData.ThemeFile);
-			    }
+			    this.ThemeSwitch();
 			    
-				
+			    
 		    }));
 	    }));
 	    stopPulseTween.Play();
