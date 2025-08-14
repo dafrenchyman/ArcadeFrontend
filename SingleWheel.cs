@@ -227,7 +227,7 @@ public class SingleWheel
 
 	    // Texture
 	    //Texture2D texture = GD.Load<Texture2D>(menuItem.LogoLocation);
-	    var texture = LoadExternalImage(menuItem.LogoLocation);
+	    var texture = Utils.LoadExternalImage((menuItem.LogoLocation));
 	    Node2D textureNode = new Node2D();
 
 	    float scaleRatio = 1.0f;
@@ -421,6 +421,10 @@ public class SingleWheel
 		if (menuItem.Name != null)
 		{
 			gameNameNode.Text = menuItem.Name;    
+		}
+		else
+		{
+			gameNameNode.Text = "";
 		}
 			    
 		// Call theme switch

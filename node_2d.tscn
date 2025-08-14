@@ -1,13 +1,27 @@
-[gd_scene load_steps=4 format=3 uid="uid://flyyuwcm11jd"]
+[gd_scene load_steps=7 format=3 uid="uid://flyyuwcm11jd"]
 
-[ext_resource type="Script" uid="uid://eafmutsekrn5" path="res://TopLayer.cs" id="1_epypp"]
+[ext_resource type="Script" uid="uid://eafmutsekrn5" path="res://ui/TopLayer.cs" id="1_epypp"]
 [ext_resource type="Script" uid="uid://b4n5sscblw51b" path="res://Background.cs" id="4_0hol4"]
-[ext_resource type="Script" uid="uid://bme806hvpu5qd" path="res://Menu.cs" id="4_q6r6c"]
+[ext_resource type="Script" uid="uid://c7au4u02cg2o6" path="res://ui/default/ItemInformation.cs" id="4_kdubu"]
+[ext_resource type="Script" uid="uid://d2t5g6ixne2ug" path="res://ui/Menu.cs" id="4_q6r6c"]
+[ext_resource type="Shader" uid="uid://dehg07wvd340c" path="res://blurShader.gdshader" id="5_q6r6c"]
 
-[node name="TopLayer" type="Node2D"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kdubu"]
+shader = ExtResource("5_q6r6c")
+shader_parameter/radius_px = 4.0
+shader_parameter/samples = 4
+
+[node name="TopLayer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_epypp")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 0
 
 [node name="Control" type="Control" parent="CanvasLayer"]
 layout_mode = 3
@@ -15,17 +29,6 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
-grow_vertical = 2
-
-[node name="WheelArc" type="Control" parent="CanvasLayer/Control"]
-visible = false
-z_index = 100
-layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 0
 grow_vertical = 2
 
 [node name="Menu" type="Control" parent="CanvasLayer/Control"]
@@ -70,3 +73,89 @@ theme_override_font_sizes/font_size = 60
 text = "<GameName>"
 vertical_alignment = 1
 autowrap_mode = 3
+
+[node name="OverlayLayerOld" type="CanvasLayer" parent="."]
+visible = false
+
+[node name="ItemInformation" type="Control" parent="OverlayLayerOld"]
+z_index = 4000
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_kdubu")
+
+[node name="Overlay" type="ColorRect" parent="OverlayLayerOld/ItemInformation"]
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.784314)
+
+[node name="Blur" type="ColorRect" parent="OverlayLayerOld/ItemInformation"]
+material = SubResource("ShaderMaterial_kdubu")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Information" type="Control" parent="OverlayLayerOld/ItemInformation"]
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Description" type="Label" parent="OverlayLayerOld/ItemInformation/Information"]
+layout_direction = 2
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.3
+anchor_top = 0.25
+anchor_right = 0.95
+anchor_bottom = 0.7
+offset_left = -0.5
+offset_top = -11.5
+offset_right = 0.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="Logo" type="TextureRect" parent="OverlayLayerOld/ItemInformation/Information"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.2
+offset_right = 40.0
+offset_bottom = 40.0
+expand_mode = 3
+stretch_mode = 4
+
+[node name="Poster" type="TextureRect" parent="OverlayLayerOld/ItemInformation/Information"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.2
+anchor_right = 0.25
+anchor_bottom = 0.7
+offset_top = -20.0
+offset_right = 40.0
+offset_bottom = 20.0
+grow_vertical = 2
+expand_mode = 4

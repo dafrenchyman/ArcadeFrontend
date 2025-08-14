@@ -4,11 +4,14 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="BlurTest.tscn" />
     <Content Include="config.json" />
     <Content Include="config_example.json" />
     <Content Include="default.nix" />
     <Content Include="LICENSE" />
     <Content Include="nixos_runner.sh" />
     <Content Include="README.md" />
+    <Content Include="red_test.gdshader" />
+    <Content Include="ui\default\overlay_menu.tscn" />
   </ItemGroup>
 </Project>

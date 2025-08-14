@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class TopLayer : Node2D
+public partial class TopLayer : Control
 {
 	
 	private const int WM_FOCUS_OUT = 1005;

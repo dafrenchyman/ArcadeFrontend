@@ -16,6 +16,8 @@ public partial class Menu : Control
 	private Dictionary<int, MenuItemData> _menuDepth = new Dictionary<int, MenuItemData>();
 	private int _currDepth;
 
+	private CanvasLayer _overlay;
+
 	public override void _Ready()
 	{
 		// Load Data
@@ -41,7 +43,7 @@ public partial class Menu : Control
 	
 	private void RunCommandForSelectedItem()
 	{
-		var selectedItem = _menu.GetMenuItem(_currentMenuLocation);
+		MenuItemData selectedItem = _menu.GetMenuItem(_currentMenuLocation);
 		if (!string.IsNullOrEmpty(selectedItem.LaunchCommand))
 		{
 			GD.Print($"Running: {selectedItem.LaunchCommand}");
@@ -74,12 +76,19 @@ public partial class Menu : Control
 	
 	public override void _UnhandledInput(InputEvent @event)
 	{
+		var selectedItem = _menu.GetMenuItem(_currentMenuLocation);
 		if (@event.IsActionPressed("ui_cancel"))
 		{
 			if (_currentMenuLocation.Length == 1)
 			{
 				GD.Print("Exit");
 				GetTree().Quit();
+			}
+			else if (selectedItem.ItemInformation != null && _overlay != null)
+			{
+				this.RemoveChild(_overlay);
+				_overlay.QueueFree();
+				_overlay = null;
 			}
 			else
 			{
@@ -92,7 +101,7 @@ public partial class Menu : Control
 		}
 		if (@event.IsActionPressed("ui_accept"))
 		{
-			var selectedItem = _menu.GetMenuItem(_currentMenuLocation);
+			
 			// If it's something with sub menus
 			if (selectedItem.Items.Count > 0)
 			{
@@ -109,7 +118,16 @@ public partial class Menu : Control
 			{
 				RunCommandForSelectedItem();	
 			}
-			
+			else if (selectedItem.ItemInformation != null && _overlay == null)
+			{
+				var packed = GD.Load<PackedScene>("res://ui/default/overlay_menu.tscn");
+				_overlay = packed.Instantiate<CanvasLayer>();
+				AddChild(_overlay); // add to the SAME scene tree so SCREEN_TEXTURE sees the wheel
+
+				ItemInformation information = _overlay.GetNode<ItemInformation>("./ItemInformation");
+				information.FillFields(selectedItem);
+				
+			}
 		}
 		
 		if (@event.IsActionPressed("ui_down"))

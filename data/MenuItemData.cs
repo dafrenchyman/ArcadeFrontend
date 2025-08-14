@@ -7,9 +7,13 @@ public class MenuItemData
 {
 	public int index { get; set; }
 	public string? Name { get; set; }
+	public string? Description { get; set; }
+	public string? Poster { get; set; }
 	public string? LogoLocation { get; set; }
 	public string? ThemePck { get; set; }
 	public string? ThemeFile { get; set; }
+
+	public ItemInformationData ItemInformation { get; set; }
 	public string? LaunchCommand { get; set; }
 	public string? MenuType { get; set; }
 	public List<MenuItemData> Items { get; set; } = new();

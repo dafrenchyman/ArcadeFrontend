@@ -1,0 +1,94 @@
+[gd_scene load_steps=4 format=3 uid="uid://cy1hit6sw1vwj"]
+
+[ext_resource type="Script" uid="uid://c7au4u02cg2o6" path="res://ui/default/ItemInformation.cs" id="1_o80cs"]
+[ext_resource type="Shader" uid="uid://dehg07wvd340c" path="res://blurShader.gdshader" id="2_r0eye"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_x370m"]
+shader = ExtResource("2_r0eye")
+shader_parameter/radius_px = 4.0
+shader_parameter/samples = 4
+
+[node name="OverlayMenu" type="CanvasLayer"]
+
+[node name="ItemInformation" type="Control" parent="."]
+z_index = 4000
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_o80cs")
+
+[node name="Overlay" type="ColorRect" parent="ItemInformation"]
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.784314)
+
+[node name="Blur" type="ColorRect" parent="ItemInformation"]
+material = SubResource("ShaderMaterial_x370m")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Information" type="Control" parent="ItemInformation"]
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Description" type="Label" parent="ItemInformation/Information"]
+layout_direction = 2
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.3
+anchor_top = 0.25
+anchor_right = 0.95
+anchor_bottom = 0.7
+offset_left = -0.5
+offset_top = -11.5
+offset_right = 0.5
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="Logo" type="TextureRect" parent="ItemInformation/Information"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.2
+offset_right = 40.0
+offset_bottom = 40.0
+expand_mode = 3
+stretch_mode = 4
+
+[node name="Poster" type="TextureRect" parent="ItemInformation/Information"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.2
+anchor_right = 0.25
+anchor_bottom = 0.7
+offset_top = -20.0
+offset_right = 40.0
+offset_bottom = 20.0
+grow_vertical = 2
+expand_mode = 4

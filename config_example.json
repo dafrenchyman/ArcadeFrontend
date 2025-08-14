@@ -21,18 +21,73 @@
       "LogoLocation": "/home/mrsharky/dev/GameArtwork/Logos/snes.png",
       "Items": [
         {
-          "Name": "Donkey Kong Country",
+          "Name": "Donkey Kong Country (Experimental way to add roms -- NOT FINISHED)",
           "LogoLocation": "/ROMs/GameArtwork/Logos/DonkeyKongCountry.png",
           "ThemePck": "//ROMs/Themes/donkey_kong_theme.pck",
           "ThemeFile": "res://themes/donkeyKongCountry/theme.tscn",
-          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/Donkey Kong Country.sfc\""
+          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/Donkey Kong Country.sfc\"",
+          "ItemInformation": {
+            "Description": "Madness and Mayhem in this 3D Gorilla Thriller!\n\nDonkey Kong is back with a new sidekick, Diddy Kong, in a crazy island adventure! Challenged by the crazed tribe of reptilian Kremlings, they endeavor to get back their stolen banana horde! Armed with lightning-quick moves, chest-pounding muscle and awesome aerial acrobatics, our duo is ready to face their cunning adversaries. With the help of Donkey Kong's quirky family and his wild animal mounts, they squabble and scamper their way through the unending monkey mayhem!",
+            "Platform": "Super Nintendo (SNES)",
+            "ReleaseDate": "1994-11-21",
+            "Players": 2,
+            "Coop": true,
+            "LogoLocation": "/home/mrsharky/dev/GameArtwork/Logos/Donkey Kong Country (USA).png",
+            "Developers": ["Rare, Ltd."],
+            "Publishers": ["Nintendo of America, Inc."],
+            "Poster": "/home/mrsharky/dev/GameArtwork/Posters/DonkeyKongCountry.png",
+            "Versions": [
+              {
+                "Default": false,
+                "Regions": ["EU"],
+                "Revision": "Original",
+                "Languages": ["En", "Fr", "De"],
+                "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/Donkey Kong Country (Europe) (En,Fr,De).sfc\""
+              },
+              {
+                "Default": false,
+                "Regions": ["EU"],
+                "Revision": "Ver. 1",
+                "Languages": ["En", "Fr", "De"],
+                "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/Donkey Kong Country [EU] [En,Fr,De] [Ver 1].sfc\""
+              },
+              {
+                "Default": false,
+                "Regions": ["EU","USA"],
+                "Revision": "Ver. 2",
+                "Languages": ["En"],
+                "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/Donkey Kong Country [USA, EU] [Ver 2].sfc\""
+              },
+              {
+                "Default": true,
+                "Region": "USA",
+                "Revision": "Original",
+                "Languages": ["En"],
+                "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/snes/Donkey Kong Country [USA].sfc'"
+              },
+              {
+                "Default": false,
+                "Region": "USA",
+                "Revision": "Ver. 1",
+                "Languages": ["En"],
+                "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/snes/DonkeyKongCountry [USA] [Ver 1].sfc'"
+              },
+              {
+                "Default": false,
+                "Region": "USA",
+                "Revision": "Ver 2",
+                "Languages": ["En"],
+                "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so '/ROMs/snes/DonkeyKongCountry [USA] [Ver 2].sfc'"
+              }
+            ]
+          }
         },
         {
           "Name": "Donkey Kong Country 2 - Diddy's Kong Quest",
           "LogoLocation": "/ROMs/GameArtwork/Logos/DonkeyKongCountry 2.png",
           "ThemePck": "//ROMs/Themes/donkey_kong_theme.pck",
           "ThemeFile": "res://themes/donkeyKongCountry2/theme.tscn",
-          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/Donkey Kong Country 2.sfc\""
+          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/DonkeyKongCountry2.sfc\""
         }
       ]
     }

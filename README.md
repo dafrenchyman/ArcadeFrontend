@@ -35,6 +35,8 @@ This will most likely change, but using Godot:
 - [x] Wheel menu for selecting games
  - [ ] Make the wheel prettier
  - [ ] Better wheel navigation - Currently only works on single presses
+   - [ ] Allow multiple presses
+   - [ ] Allow holding
 - [x] Launch Applications
 - [x] Dynamic theme loading via .pck files (currently only for individual menu items)
   - [ ] Research security implications (probably terrible)
@@ -49,6 +51,12 @@ This will most likely change, but using Godot:
 - [x] Sub wheel menus
   - [ ] Need sub wheels to remember last location in previous wheel
 - [ ] Different resolutions - currently setup for 1080p
+- [x] Game Information screen (optional) - Thinking this should be something similar to the PS5 when a game is selected
+  - [ ] Started work on a game information screen (see example in `config_example.json`). Still not complete.
+  - [ ] Select different game versions in menu
+  - [ ] Allow theming
+  - [ ] Add more game information to screen
+  - [ ] Add screenshot examples
 - ...
 
 ## Development
