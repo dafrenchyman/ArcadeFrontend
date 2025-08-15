@@ -13,5 +13,6 @@
     <Content Include="README.md" />
     <Content Include="red_test.gdshader" />
     <Content Include="ui\default\OverlayMenu.tscn" />
+    <Content Include="ui\default\Wheel\Wheel.tscn" />
   </ItemGroup>
 </Project>

@@ -1,11 +1,22 @@
 using Godot;
 using System;
+using System.IO;
+using System.Text.Json;
+using ArcadeFrontend;
+
 
 public partial class TopLayer : Control
 {
-	
+	// Constants
 	private const int WM_FOCUS_OUT = 1005;
 	private const int WM_FOCUS_IN = 1004;
+	
+	private MenuItemData _menu;
+	private Wheel _wheel;
+	
+	// Exports
+	[Export] public PackedScene WheelScene { get; set; }
+
 	public TopLayer()
 	{
 		Console.Write("Hello");
@@ -24,12 +35,28 @@ public partial class TopLayer : Control
 			InputMap.ActionAddEvent("toggle_fullscreen",
 				new InputEventKey { PhysicalKeycode = Key.F });
 		}
+		
+		// Load Menu Data
+		var json = File.ReadAllText("config.json");
+		var options = new JsonSerializerOptions
+		{
+			PropertyNameCaseInsensitive = true,
+			IncludeFields = true,
+		};
+		_menu = JsonSerializer.Deserialize<MenuItemData>(json, options);
+		
+		// Load the first wheel
+		_wheel = WheelScene.Instantiate<Wheel>();
+		AddChild(_wheel);
+		
+		_wheel.Start(this, _menu);
+
 	}
 
 	private void OnRootViewportSizeChanged()
 	{
 		GD.Print("Window size changed!");
-		var wheelArc = GetNode<Menu>("CanvasLayer/Control/Menu");
+		//var wheelArc = GetNode<Menu>("CanvasLayer/Control/Menu");
 		//wheelArc._currentMenu.WindowResized();
 		GD.Print($"New size: {GetTree().Root.Size}");
 	}

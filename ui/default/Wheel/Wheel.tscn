@@ -1,0 +1,64 @@
+[gd_scene load_steps=4 format=3 uid="uid://dsmljdrp3dbih"]
+
+[ext_resource type="Script" uid="uid://c8dwxbjitxafm" path="res://ui/default/Wheel/Wheel.cs" id="1_3epog"]
+[ext_resource type="Script" uid="uid://b4n5sscblw51b" path="res://Background.cs" id="1_rk6lh"]
+[ext_resource type="PackedScene" uid="uid://cy1hit6sw1vwj" path="res://ui/default/OverlayMenu.tscn" id="2_ox5yg"]
+
+[node name="CanvasLayer" type="CanvasLayer" node_paths=PackedStringArray("_gameNameLabel", "_background", "_menuNode")]
+script = ExtResource("1_3epog")
+OverlayMenuScene = ExtResource("2_ox5yg")
+_gameNameLabel = NodePath("Control/GameName")
+_background = NodePath("Control/Background")
+_menuNode = NodePath("Control/Menu")
+
+[node name="Control" type="Control" parent="."]
+z_index = -100
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="Control" parent="Control"]
+z_index = -2000
+z_as_relative = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rk6lh")
+
+[node name="GameName" type="Label" parent="Control"]
+z_index = 2000
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.9
+anchor_right = 0.7
+anchor_bottom = 0.95
+offset_left = -0.5
+offset_top = -14.5
+offset_right = 0.5
+offset_bottom = 14.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 60
+text = "<GameName>"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Menu" type="Control" parent="Control"]
+z_index = 2000
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2

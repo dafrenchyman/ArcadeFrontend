@@ -1,9 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://flyyuwcm11jd"]
+[gd_scene load_steps=3 format=3 uid="uid://flyyuwcm11jd"]
 
 [ext_resource type="Script" uid="uid://eafmutsekrn5" path="res://ui/TopLayer.cs" id="1_epypp"]
-[ext_resource type="PackedScene" uid="uid://cy1hit6sw1vwj" path="res://ui/default/OverlayMenu.tscn" id="3_0hol4"]
-[ext_resource type="Script" uid="uid://b4n5sscblw51b" path="res://Background.cs" id="4_0hol4"]
-[ext_resource type="Script" uid="uid://d2t5g6ixne2ug" path="res://ui/Menu.cs" id="4_q6r6c"]
+[ext_resource type="PackedScene" uid="uid://dsmljdrp3dbih" path="res://ui/default/Wheel/Wheel.tscn" id="2_q6r6c"]
 
 [node name="TopLayer" type="Control"]
 layout_mode = 3
@@ -13,58 +11,4 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_epypp")
-
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-layer = 0
-
-[node name="Control" type="Control" parent="CanvasLayer"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Menu" type="Control" parent="CanvasLayer/Control"]
-z_index = 100
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("4_q6r6c")
-OverlayMenuScene = ExtResource("3_0hol4")
-
-[node name="Background" type="Control" parent="CanvasLayer/Control"]
-z_index = -2000
-z_as_relative = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("4_0hol4")
-
-[node name="GameName" type="Label" parent="CanvasLayer/Control"]
-z_index = 2000
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.02
-anchor_top = 0.9
-anchor_right = 0.7
-anchor_bottom = 0.95
-offset_left = -0.5
-offset_top = -14.5
-offset_right = 0.5
-offset_bottom = 14.5
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 60
-text = "<GameName>"
-vertical_alignment = 1
-autowrap_mode = 3
+WheelScene = ExtResource("2_q6r6c")

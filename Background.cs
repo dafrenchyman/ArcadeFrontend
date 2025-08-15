@@ -53,7 +53,7 @@ public partial class Background : Control
 		_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		//_currentThemeInstance.Size = GetViewport().GetVisibleRect().Size;
 		AddChild(_currentThemeInstance);
-		MoveChild(_currentThemeInstance, 0); // Put it behind everything else
+		//MoveChild(_currentThemeInstance, 0); // Put it behind everything else
 	}
 
 
@@ -97,10 +97,11 @@ public partial class Background : Control
 		
 		_currentThemeInstance = _scene.Instantiate<Control>();
 		_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+		_currentThemeInstance.ZIndex = -4_000;
 		//_currentThemeInstance.Size = GetViewport().GetVisibleRect().Size;
 		//_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(_currentThemeInstance);
-		MoveChild(_currentThemeInstance, 0); // Put it behind everything else
+		//MoveChild(_currentThemeInstance, -1_000); // Put it behind everything else
 
 		// Fade in
 		//await Fade(false);
