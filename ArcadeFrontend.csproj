@@ -12,6 +12,6 @@
     <Content Include="nixos_runner.sh" />
     <Content Include="README.md" />
     <Content Include="red_test.gdshader" />
-    <Content Include="ui\default\overlay_menu.tscn" />
+    <Content Include="ui\default\OverlayMenu.tscn" />
   </ItemGroup>
 </Project>

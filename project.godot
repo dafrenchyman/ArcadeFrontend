@@ -14,6 +14,10 @@ config/name="ArcadeFrontend"
 run/main_scene="uid://flyyuwcm11jd"
 config/features=PackedStringArray("4.4", "C#", "Forward Plus")
 
+[autoload]
+
+ThemeManager="*res://ThemeManager.cs"
+
 [display]
 
 window/size/viewport_width=1920

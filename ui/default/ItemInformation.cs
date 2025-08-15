@@ -3,31 +3,32 @@ using Godot;
 
 public partial class ItemInformation : Control
 {
-	private ColorRect _dimmer;
-	private Control _content;
-
-	public override void _Ready()
-	{
-		_dimmer = GetNode<ColorRect>(path:"./Overlay");
-		_content = GetNode<Control>(path:"./../../Control"); // Panel or VBoxContainer
-		//HideOverlay(immediate:false);
-	}
-
-	public void ShowOverlay()
-	{
-		Visible = true;
-		var tw = CreateTween();
-		tw.TweenProperty(_dimmer, property:"modulate:a", finalVal:0.5f, duration:0.2f); // fade background dim
-		tw.TweenProperty(_content, property:"modulate:a", finalVal:1.0f, duration:0.2f);
-		_content.MouseFilter = Control.MouseFilterEnum.Stop; // block clicks to background
-	}
 
 	public void FillFields(MenuItemData menuItem)
 	{
 		// Nodes we will add data to:
 		Label gameDescriptionNode = this.GetNode<Label>("./Information/Description");
-		TextureRect logeTextureNode = this.GetNode<TextureRect>("./Information/Logo");
+		TextureRect logoTextureNode = this.GetNode<TextureRect>("./Information/Logo");
 		TextureRect posterTextureNode = this.GetNode<TextureRect>("./Information/Poster");
+		
+		if (ThemeManager.Instance.LoadThemePack(menuItem.ThemePck))
+		{
+			// logo
+			string logoPath = menuItem.ThemeFile + "/gfx/logo.png";
+			if (ResourceLoader.Exists(logoPath))
+			{
+				Texture2D texture = ResourceLoader.Load<Texture2D>(logoPath);
+				logoTextureNode.Texture = texture;
+			}
+			
+			// Poster
+			string posterPath = menuItem.ThemeFile + "/gfx/poster.png";
+			if (ResourceLoader.Exists(posterPath))
+			{
+				Texture2D texture = ResourceLoader.Load<Texture2D>(posterPath);
+				posterTextureNode.Texture = texture;
+			}
+		}
 		
 		if (menuItem.ItemInformation != null)
 		{
@@ -47,11 +48,11 @@ public partial class ItemInformation : Control
 			if (info.LogoLocation != null)
 			{
 				var texture = Utils.LoadExternalImage(info.LogoLocation);
-				logeTextureNode.Texture = texture;    
+				logoTextureNode.Texture = texture;
 			}
 			else
 			{
-				logeTextureNode.Texture = null;
+				logoTextureNode.Texture = null;
 			}
 			
 			// Add Poster
@@ -68,25 +69,8 @@ public partial class ItemInformation : Control
 		else
 		{
 			gameDescriptionNode.Text = "";
-			logeTextureNode.Texture = null;
+			logoTextureNode.Texture = null;
 			posterTextureNode.Texture = null;
 		}
-	}
-
-	public void HideOverlay(bool immediate = false)
-	{
-		if (immediate)
-		{
-			_dimmer.Modulate = new Color(0,0,0,0);
-			_content.Modulate = new Color(1,1,1,0);
-			Visible = false;
-			return;
-		}
-
-		var tw = CreateTween();
-		tw.TweenProperty(_dimmer, "modulate:a", 0.0f, 0.2f);
-		tw.TweenProperty(_content, "modulate:a", 0.0f, 0.2f)
-		  .Finished += () => Visible = false;
-		_content.MouseFilter = Control.MouseFilterEnum.Ignore;
 	}
 }

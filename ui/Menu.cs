@@ -16,7 +16,9 @@ public partial class Menu : Control
 	private Dictionary<int, MenuItemData> _menuDepth = new Dictionary<int, MenuItemData>();
 	private int _currDepth;
 
-	private CanvasLayer _overlay;
+	private OverlayMenu _overlay;
+	
+	[Export] public PackedScene OverlayMenuScene { get; set; }
 
 	public override void _Ready()
 	{
@@ -31,7 +33,9 @@ public partial class Menu : Control
 		_currDepth = 0;
 		_menuDepth.Add(_currDepth, _menu);
 		_currentMenu = _LoadLayer(_menu);
-		_currentMenuLocation = new MenuPath(new[] { 0 });	
+		_currentMenuLocation = new MenuPath(new[] { 0 });
+
+		SetProcessUnhandledInput(enable: true);
 	}
 
 	private SingleWheel _LoadLayer(MenuItemData menuData)
@@ -113,20 +117,26 @@ public partial class Menu : Control
 				_currentMenuLocation = newPath;
 				_currDepth++;
 			}
-			// If it something we can run
+			// If it's something we can run
 			else if (!string.IsNullOrEmpty(selectedItem.LaunchCommand))
 			{
 				RunCommandForSelectedItem();	
 			}
+			// If it's an overlay
 			else if (selectedItem.ItemInformation != null && _overlay == null)
 			{
-				var packed = GD.Load<PackedScene>("res://ui/default/overlay_menu.tscn");
-				_overlay = packed.Instantiate<CanvasLayer>();
-				AddChild(_overlay); // add to the SAME scene tree so SCREEN_TEXTURE sees the wheel
-
-				ItemInformation information = _overlay.GetNode<ItemInformation>("./ItemInformation");
-				information.FillFields(selectedItem);
+				_overlay = OverlayMenuScene.Instantiate<OverlayMenu>();
+				AddChild(_overlay);
 				
+				// Set the re-enable of the input after
+				_overlay.Closed += () =>
+				{
+					SetProcessUnhandledInput(true);
+					_overlay = null; // allow re-opening later
+				};
+				
+				_overlay.Start(selectedItem);
+				SetProcessUnhandledInput(enable: false);
 			}
 		}
 		

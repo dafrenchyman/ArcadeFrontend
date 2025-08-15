@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using ArcadeFrontend;
 
 public partial class Background : Control
 {
@@ -77,14 +78,15 @@ public partial class Background : Control
 		UnloadCurrentTheme();
 
 		// Load .pck file
-		if (!ProjectSettings.LoadResourcePack(pckPath))
+		if (!ThemeManager.Instance.LoadThemePack(pckPath)) // (!ProjectSettings.LoadResourcePack(pckPath))
 		{
 			GD.PushError($"Failed to load PCK: {pckPath}");
 			return;
 		}
 
 		// Load .tscn from the pck
-		var scene = GD.Load<PackedScene>(tscnPath);
+		string fullTscnPath = tscnPath + "/theme.tscn";
+		var scene = GD.Load<PackedScene>(fullTscnPath);
 		if (scene == null)
 		{
 			GD.PushError($"Failed to load scene: {tscnPath}");
