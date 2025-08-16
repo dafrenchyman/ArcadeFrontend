@@ -19,32 +19,6 @@ public partial class Background : Control
 		AddChild(_fadeRect);
 		MoveChild(_fadeRect, GetChildCount() - 1); // Move on top
 	}
-	
-	public void _OldReady() {
-		// Load scene
-		string pckPath = "//home/mrsharky/dev/dafrenchyman/arcadeFrontendThemes/donkey_kong_theme.pck";
-		if (ProjectSettings.LoadResourcePack(pckPath))
-		{
-			GD.Print("Theme loaded!");
-
-			// Load a scene *inside* the .pck — path must match exactly.
-			var scene = (PackedScene)ResourceLoader.Load("res://donkey_kong_country_2.tscn");
-			if (scene != null)
-			{
-				var instance = scene.Instantiate();
-				
-				this.AddChild(instance);
-			}
-			else
-			{
-				GD.PrintErr("Could not load theme scene from pck.");
-			}
-		}
-		else
-		{
-			GD.PrintErr("Failed to load .pck file.");
-		}
-	}
 
 	public void RestartTheme()
 	{
@@ -78,7 +52,7 @@ public partial class Background : Control
 		UnloadCurrentTheme();
 
 		// Load .pck file
-		if (!ThemeManager.Instance.LoadThemePack(pckPath)) // (!ProjectSettings.LoadResourcePack(pckPath))
+		if (!ThemeManager.Instance.LoadThemePack(pckPath))
 		{
 			GD.PushError($"Failed to load PCK: {pckPath}");
 			return;

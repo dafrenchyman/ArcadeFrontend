@@ -5,7 +5,7 @@
   "Items": [
     {
       "Name": "Nintendo Entertainment System",
-      "LogoLocation": "/home/mrsharky/dev/GameArtwork/Logos/nes.png",
+      "LogoLocation": "/ROMs/GameArtwork/Logos/nes.png",
       "ThemePck": "//ROMs/Themes/defaultNesTheme.pck",
       "ThemeFile": "res://themes/defaultNesTheme/theme.tscn",
       "Items": [
@@ -18,7 +18,7 @@
     },
     {
       "Name": "Super Nintendo",
-      "LogoLocation": "/home/mrsharky/dev/GameArtwork/Logos/snes.png",
+      "LogoLocation": "/ROMs/GameArtwork/Logos//snes.png",
       "Items": [
         {
           "Name": "Donkey Kong Country (Experimental way to add roms -- NOT FINISHED)",

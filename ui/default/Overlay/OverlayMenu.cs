@@ -9,15 +9,21 @@ public partial class OverlayMenu : CanvasLayer
 	private Control _content;
 	private bool _closedEmitted = false;
 	
+	
+	[Export] private Button playButton { get; set; }
 	[Export] private ItemInformation itemInformation { get; set; }
 	
 	[Signal] public delegate void ClosedEventHandler();
+	[Signal] public delegate void OptionSelectedEventHandler(string option);
 	
 	public override void _Ready()
 	{
 		_dimmer = GetNode<ColorRect>(path:"./Overlay");
 		_content = GetNode<Control>(path:"./../../Control"); // Panel or VBoxContainer
 		//HideOverlay(immediate:false);
+		
+		// Set focus to the play button
+		playButton.GrabFocus();
 	}
 
 	public override void _UnhandledInput(InputEvent @event)

@@ -12,7 +12,10 @@
     <Content Include="nixos_runner.sh" />
     <Content Include="README.md" />
     <Content Include="red_test.gdshader" />
-    <Content Include="ui\default\OverlayMenu.tscn" />
+    <Content Include="ui\default\Overlay\OverlayMenu.tscn" />
     <Content Include="ui\default\Wheel\Wheel.tscn" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ui\assets\images\" />
   </ItemGroup>
 </Project>

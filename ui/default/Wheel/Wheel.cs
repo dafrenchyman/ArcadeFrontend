@@ -14,6 +14,8 @@ public partial class Wheel : CanvasLayer
 	private int _totalItemsInDirection;
 	private Vector2 _screenSize;
 	private Timer _inactivityTimer;
+	private const float StartingInactivitySeconds = 3.0f;
+	private const float SubsequentInactivitySeconds = 3.0f;
 	
 	private int _currIndex = 0;
 	private float _itemScaleRatio = 0.8f;
@@ -57,7 +59,7 @@ public partial class Wheel : CanvasLayer
 		
 		// Create an inactivity timer
 		_inactivityTimer = new Timer();
-		_inactivityTimer.WaitTime = 10.0f; // Longer timeout on first start
+		_inactivityTimer.WaitTime = StartingInactivitySeconds; // Longer timeout on first start
 		_inactivityTimer.OneShot = true;
 		_inactivityTimer.Autostart = false;
 		_menuNode.AddChild(_inactivityTimer);
@@ -310,6 +312,23 @@ public partial class Wheel : CanvasLayer
 		}
 		return null;
 	}
+
+	public void FadeInWheel()
+	{
+		if (this._menuNode.Modulate.A < 1.0f)
+		{
+			Tween fadeInTween = this._menuNode.CreateTween();
+			Color startAlpha = new Color(1.0f, 1.0f, 1.0f, this._menuNode.Modulate.A);
+			Color endAlpha = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+			fadeInTween.TweenMethod(
+				Callable.From<Color>((value) => { this._menuNode.Modulate = value; }),
+				startAlpha,
+				endAlpha,
+				_rotationDuration
+			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
+			fadeInTween.Play();
+		}
+	}
 	
 	public void SpinWheel(int direction, Node2D pivot, int count)
 	{
@@ -324,15 +343,7 @@ public partial class Wheel : CanvasLayer
 		_inactivityTimer.Stop();
 		
 		// Fade in if not already visible
-		Color startAlpha = new Color(1.0f, 1.0f,1.0f, this._menuNode.Modulate.A);
-		Color endAlpha = new Color(1.0f, 1.0f, 1.0f, 1.0f);
-		if (this._menuNode.Modulate.A < 1.0f)
-			_spinningTween.Parallel().TweenMethod(
-				Callable.From<Color>((value) => { this._menuNode.Modulate = value; }),
-				startAlpha,
-				endAlpha,
-				_rotationDuration
-			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
+		FadeInWheel();
 		
 		// Rotate the "wheel"
 		_spinningTween.Parallel().TweenMethod(
@@ -413,7 +424,7 @@ public partial class Wheel : CanvasLayer
 		}
 		_spinningTween.Play();
 		
-		_inactivityTimer.WaitTime = 3.0f;
+		_inactivityTimer.WaitTime = SubsequentInactivitySeconds;
 		_inactivityTimer.Start();
 	}
 
@@ -611,6 +622,7 @@ public partial class Wheel : CanvasLayer
 					SetProcessUnhandledInput(true);
 					wheel = null; // allow re-opening later
 					_background.RestartTheme();
+					FadeInWheel();
 					_menuNode.Visible = true;
 					_gameNameLabel.Visible = true;
 				};
@@ -637,6 +649,7 @@ public partial class Wheel : CanvasLayer
 				{
 					SetProcessUnhandledInput(true);
 					_overlay = null; // allow re-opening later
+					FadeInWheel();
 					this.Visible = true;
 				};
 				

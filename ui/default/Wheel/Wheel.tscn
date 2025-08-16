@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c8dwxbjitxafm" path="res://ui/default/Wheel/Wheel.cs" id="1_3epog"]
 [ext_resource type="Script" uid="uid://b4n5sscblw51b" path="res://Background.cs" id="1_rk6lh"]
-[ext_resource type="PackedScene" uid="uid://cy1hit6sw1vwj" path="res://ui/default/OverlayMenu.tscn" id="2_ox5yg"]
+[ext_resource type="PackedScene" uid="uid://cy1hit6sw1vwj" path="res://ui/default/Overlay/OverlayMenu.tscn" id="2_ox5yg"]
 
 [node name="CanvasLayer" type="CanvasLayer" node_paths=PackedStringArray("_gameNameLabel", "_background", "_menuNode")]
 script = ExtResource("1_3epog")
