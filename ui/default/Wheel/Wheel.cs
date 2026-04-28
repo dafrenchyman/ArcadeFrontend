@@ -21,8 +21,13 @@ public partial class Wheel : CanvasLayer
 	private float _itemScaleRatio = 0.8f;
 	private float _itemRotationRatio = 5.0f;
 	private float _itemPerHeight = 10.0f;
-	private float _rotationDuration = 0.2f;
 	private float _fadeDuration = 0.5f;
+	private const float BaseRotationDurationSeconds = 0.2f;
+	private const float HeldRotationDurationSeconds = 0.08f;
+	private const float HoldRepeatDelaySeconds = 0.2f;
+	private const float HoldRepeatStartIntervalSeconds = 0.08f;
+	private const float HoldRepeatMinimumIntervalSeconds = 0.02f;
+	private const float HoldRepeatAcceleration = 0.78f;
 	private Tween _spinningTween;
 	private Tween _pulseTween;
 	private Vector2 _sizePriorToPulse;
@@ -32,6 +37,12 @@ public partial class Wheel : CanvasLayer
 	private MenuPath _currentMenuLocation ;
 
 	private bool _debug = false;
+	private int _heldDirection = 0;
+	private double _holdDelayRemaining = 0.0;
+	private double _holdRepeatRemaining = 0.0;
+	private double _holdRepeatInterval = HoldRepeatStartIntervalSeconds;
+	private bool _deferThemeLoading = false;
+	private bool _themePending = false;
 
 	private Dictionary<int, MenuItemData> _menuDepth = new Dictionary<int, MenuItemData>();
 	private int _currDepth;
@@ -317,6 +328,7 @@ public partial class Wheel : CanvasLayer
 	{
 		if (this._menuNode.Modulate.A < 1.0f)
 		{
+			float rotationDuration = GetCurrentRotationDuration();
 			Tween fadeInTween = this._menuNode.CreateTween();
 			Color startAlpha = new Color(1.0f, 1.0f, 1.0f, this._menuNode.Modulate.A);
 			Color endAlpha = new Color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -324,7 +336,7 @@ public partial class Wheel : CanvasLayer
 				Callable.From<Color>((value) => { this._menuNode.Modulate = value; }),
 				startAlpha,
 				endAlpha,
-				_rotationDuration
+				rotationDuration
 			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
 			fadeInTween.Play();
 		}
@@ -332,6 +344,7 @@ public partial class Wheel : CanvasLayer
 	
 	public void SpinWheel(int direction, Node2D pivot, int count)
 	{
+		float rotationDuration = GetCurrentRotationDuration();
 		float t = 1.0f / (count - 1.0f);
 		float stepAngle = t * _arcRadians / 2.0f;
 		float startRotation = pivot.Rotation;
@@ -346,12 +359,12 @@ public partial class Wheel : CanvasLayer
 		FadeInWheel();
 		
 		// Rotate the "wheel"
-		_spinningTween.Parallel().TweenMethod(
-			Callable.From<float>((value) => { pivot.GlobalRotation = value; }),
-			startRotation,
-			endRotation,
-			_rotationDuration
-		).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
+			_spinningTween.Parallel().TweenMethod(
+				Callable.From<float>((value) => { pivot.GlobalRotation = value; }),
+				startRotation,
+				endRotation,
+				rotationDuration
+			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
 		
 		// Process each of the nodes in the wheel
 		foreach (KeyValuePair<int, Node2D> entry in this._arcPoints)
@@ -379,12 +392,12 @@ public partial class Wheel : CanvasLayer
 			var initialRotation = textureNode.GlobalRotation;
 				
 			// Make sure we keep them all at the same rotation
-			_spinningTween.Parallel().TweenMethod(
-				Callable.From<float>((value) => { textureNode.GlobalRotation = value; }),
-				initialRotation,
-				targetRotation,
-				_rotationDuration
-			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
+				_spinningTween.Parallel().TweenMethod(
+					Callable.From<float>((value) => { textureNode.GlobalRotation = value; }),
+					initialRotation,
+					targetRotation,
+					rotationDuration
+				).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
 			
 			// Scale to a uniform height on the Y-axis
 			var logoNode = textureNode.GetNode<Node>("Logo");
@@ -403,23 +416,23 @@ public partial class Wheel : CanvasLayer
 				var targetScale = new Vector2(scaleRatio, scaleRatio);
 
 				var initialScale = textureNode.Scale;
-				_spinningTween.Parallel().TweenMethod(
-					Callable.From<Vector2>((value) => { textureNode.Scale = value; }),
-					initialScale,
-					targetScale,
-					_rotationDuration
-				).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
+					_spinningTween.Parallel().TweenMethod(
+						Callable.From<Vector2>((value) => { textureNode.Scale = value; }),
+						initialScale,
+						targetScale,
+						rotationDuration
+					).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
 			}
 
 			// Alpha channel the nodes
 			var targetAlpha = _FadeMenuItem(nextIndex);
 			var initialAlpha = textureNode.Modulate;
-			_spinningTween.Parallel().TweenMethod(
-				Callable.From<Color>((value) => { textureNode.Modulate = value; }),
-				initialAlpha,
-				targetAlpha,
-				_rotationDuration
-			).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
+				_spinningTween.Parallel().TweenMethod(
+					Callable.From<Color>((value) => { textureNode.Modulate = value; }),
+					initialAlpha,
+					targetAlpha,
+					rotationDuration
+				).SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Sine);
 			
 		}
 		_spinningTween.Play();
@@ -428,14 +441,14 @@ public partial class Wheel : CanvasLayer
 		_inactivityTimer.Start();
 	}
 
-	public void ThemeSwitch()
+	private MenuItemData GetSelectedMenuItem()
 	{
 		var path = new MenuPath(new[] { -_currIndex });
-		MenuItemData menuItem = _menuData.GetMenuItem(path);
-		ThemeDefinition? selectedTheme = menuItem.GetResolvedTheme();
-		ThemeDefinition? fallbackTheme = this._menuData.GetResolvedTheme();
-				
-		// Add item name to screen
+		return _menuData.GetMenuItem(path);
+	}
+
+	private void UpdateSelectedItemLabel(MenuItemData menuItem)
+	{
 		if (menuItem.Name != null)
 		{
 			_gameNameLabel.Text = menuItem.Name;    
@@ -444,6 +457,15 @@ public partial class Wheel : CanvasLayer
 		{
 			_gameNameLabel.Text = "";
 		}
+	}
+
+	public void ThemeSwitch()
+	{
+		MenuItemData menuItem = GetSelectedMenuItem();
+		ThemeDefinition? selectedTheme = menuItem.GetResolvedTheme();
+		ThemeDefinition? fallbackTheme = this._menuData.GetResolvedTheme();
+				
+		UpdateSelectedItemLabel(menuItem);
 				
 		// Call theme switch
 		if (selectedTheme != null)
@@ -458,6 +480,32 @@ public partial class Wheel : CanvasLayer
 		else
 		{
 			_background.ChangeTheme(null);
+		}
+
+		_themePending = false;
+	}
+
+	private void BeginDeferredThemeLoading(int direction)
+	{
+		BeginHoldNavigation(direction);
+		if (_deferThemeLoading)
+		{
+			return;
+		}
+
+		_deferThemeLoading = true;
+		_themePending = true;
+		_background.ChangeTheme(null);
+	}
+
+	private void EndDeferredThemeLoading(int direction)
+	{
+		EndHoldNavigation(direction);
+		_deferThemeLoading = false;
+
+		if (_themePending && (_spinningTween == null || !_spinningTween.IsRunning()))
+		{
+			ThemeSwitch();
 		}
 	}
 	
@@ -479,7 +527,15 @@ public partial class Wheel : CanvasLayer
 				{	
 					_currIndex--;
 				}
-				this.ThemeSwitch();
+				UpdateSelectedItemLabel(GetSelectedMenuItem());
+				if (_deferThemeLoading)
+				{
+					_themePending = true;
+				}
+				else
+				{
+					ThemeSwitch();
+				}
 				StartPulse();
 				
 				
@@ -489,10 +545,89 @@ public partial class Wheel : CanvasLayer
 		
 	}
 
-	public void Down()
+	private bool StepSelection(int direction)
+	{
+		if (direction > 0)
+		{
+			return Down();
+		}
+
+		if (direction < 0)
+		{
+			return Up();
+		}
+
+		return false;
+	}
+
+	private void BeginHoldNavigation(int direction)
+	{
+		_heldDirection = direction;
+		_holdDelayRemaining = HoldRepeatDelaySeconds;
+		_holdRepeatRemaining = HoldRepeatStartIntervalSeconds;
+		_holdRepeatInterval = HoldRepeatStartIntervalSeconds;
+	}
+
+	private void EndHoldNavigation(int direction)
+	{
+		if (_heldDirection == direction)
+		{
+			_heldDirection = 0;
+			_holdDelayRemaining = 0.0;
+			_holdRepeatRemaining = 0.0;
+			_holdRepeatInterval = HoldRepeatStartIntervalSeconds;
+		}
+	}
+
+	private float GetCurrentRotationDuration()
+	{
+		return _deferThemeLoading ? HeldRotationDurationSeconds : BaseRotationDurationSeconds;
+	}
+
+	public override void _Process(double delta)
+	{
+		if (_heldDirection == 0)
+		{
+			return;
+		}
+
+		if (_heldDirection > 0 && !Input.IsActionPressed("ui_down"))
+		{
+			EndHoldNavigation(_heldDirection);
+			return;
+		}
+
+		if (_heldDirection < 0 && !Input.IsActionPressed("ui_up"))
+		{
+			EndHoldNavigation(_heldDirection);
+			return;
+		}
+
+		if (_holdDelayRemaining > 0.0)
+		{
+			_holdDelayRemaining -= delta;
+			return;
+		}
+
+		_holdRepeatRemaining -= delta;
+		if (_holdRepeatRemaining > 0.0)
+		{
+			return;
+		}
+
+		if (StepSelection(_heldDirection))
+		{
+			_currentMenuLocation[^1] += _heldDirection;
+			_holdRepeatInterval = Math.Max(HoldRepeatMinimumIntervalSeconds, _holdRepeatInterval * HoldRepeatAcceleration);
+		}
+
+		_holdRepeatRemaining = _holdRepeatInterval;
+	}
+
+	public bool Down()
 	{
 		if (_spinningTween != null && _spinningTween.IsRunning())
-			return;
+			return false;
 		this.AddMenuItem(_currIndex, 1);
 			
 		// Remove the last element on the other side
@@ -504,12 +639,13 @@ public partial class Wheel : CanvasLayer
 		_arcPoints.Remove(oppositeIndex);
 	
 		AnimateWheel(-1, this._pivot, _numItems);
+		return true;
 	}
 
-	public void Up()
+	public bool Up()
 	{
 		if (_spinningTween != null && _spinningTween.IsRunning())
-			return;
+			return false;
 		this.AddMenuItem(_currIndex, -1);
 			
 		// Remove the last element on the other side
@@ -521,6 +657,7 @@ public partial class Wheel : CanvasLayer
 		_arcPoints.Remove(oppositeIndex);
 
 		AnimateWheel(1, this._pivot, _numItems);
+		return true;
 	}
 	
 	public void WindowResized()
@@ -667,17 +804,27 @@ public partial class Wheel : CanvasLayer
 		
 		if (@event.IsActionPressed("ui_down"))
 		{
-			Console.Write("DOWN");
-			this.Down();
-			// Change the location
-			_currentMenuLocation[^1] += 1;
+			if (StepSelection(1))
+			{
+				_currentMenuLocation[^1] += 1;
+			}
+			BeginDeferredThemeLoading(1);
 		}
 		else if (@event.IsActionPressed("ui_up"))
 		{
-			Console.Write("UP");
-			this.Up();
-			// Change the location
-			_currentMenuLocation[^1] -= 1;
+			if (StepSelection(-1))
+			{
+				_currentMenuLocation[^1] -= 1;
+			}
+			BeginDeferredThemeLoading(-1);
+		}
+		else if (@event.IsActionReleased("ui_down"))
+		{
+			EndDeferredThemeLoading(1);
+		}
+		else if (@event.IsActionReleased("ui_up"))
+		{
+			EndDeferredThemeLoading(-1);
 		}
 	}
 	
