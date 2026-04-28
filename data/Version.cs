@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 
 namespace ArcadeFrontend;
@@ -9,5 +10,4 @@ public class Version
     public string? Revision { get; set; }
     public List<string>? Languages { get; set; }
     public string? LaunchCommand { get; set; }
-
 }

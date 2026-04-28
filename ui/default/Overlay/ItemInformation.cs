@@ -11,10 +11,16 @@ public partial class ItemInformation : Control
 		TextureRect logoTextureNode = this.GetNode<TextureRect>("./Information/Logo");
 		TextureRect posterTextureNode = this.GetNode<TextureRect>("./Information/Poster");
 		
-		if (ThemeManager.Instance.LoadThemePack(menuItem.ThemePck))
+		ThemeDefinition? theme = menuItem.GetResolvedTheme();
+		string? godotResourceRoot = theme?.GetGodotResourceRoot();
+		if (theme != null &&
+			string.Equals(theme.NormalizedType(), ThemeType.Godot, System.StringComparison.OrdinalIgnoreCase) &&
+			!string.IsNullOrWhiteSpace(theme.Pck) &&
+			!string.IsNullOrWhiteSpace(godotResourceRoot) &&
+			ThemeManager.Instance.LoadThemePack(theme.Pck))
 		{
 			// logo
-			string logoPath = menuItem.ThemeFile + "/gfx/logo.png";
+			string logoPath = godotResourceRoot + "/gfx/logo.png";
 			if (ResourceLoader.Exists(logoPath))
 			{
 				Texture2D texture = ResourceLoader.Load<Texture2D>(logoPath);
@@ -22,7 +28,7 @@ public partial class ItemInformation : Control
 			}
 			
 			// Poster
-			string posterPath = menuItem.ThemeFile + "/gfx/poster.png";
+			string posterPath = godotResourceRoot + "/gfx/poster.png";
 			if (ResourceLoader.Exists(posterPath))
 			{
 				Texture2D texture = ResourceLoader.Load<Texture2D>(posterPath);

@@ -11,6 +11,60 @@ It's very much in alpha and is missing many features. This application is a very
 
 If you want an already established front-end that runs on Linux I'd recommend [Pegasus Frontend](https://pegasus-frontend.org)
 
+# HyperSpin Theme Support
+
+ArcadeFrontend can now load a constrained subset of extracted HyperSpin themes directly at runtime.
+
+Supported first-pass compatibility:
+- `Theme.xml` plus sibling assets in the same folder
+- `Background.png`
+- `Artwork1.png` through `Artwork4.png`
+- optional `video.ogv`, or a config-provided video override
+- centered coordinates authored in `1024x768`
+- non-uniform stretch to the active viewport to match HyperSpin's widescreen behavior
+- limited intro effects using `start`, `time`, `delay`, and `type`
+
+Explicit non-goals:
+- Flash or SWF content
+- full compatibility with all community HyperSpin themes
+- automatic support for alternate video formats such as `mp4`, `avi`, or `mkv`
+
+Example config:
+```json
+{
+  "Name": "Metal Slug X",
+  "Theme": {
+    "Type": "HyperSpin",
+    "Path": "themes/MetalSlugX/Theme.xml",
+    "Video": "themes/MetalSlugX/video.ogv"
+  }
+}
+```
+
+For HyperSpin themes, `Theme.Video` is optional. If it is set, ArcadeFrontend uses that file for the theme's video region. If it is omitted, the loader falls back to `video.ogv` beside `Theme.xml`.
+
+Existing packaged Godot themes using `ThemePck` and `ThemeFile` continue to work.
+
+# Video Theme Support
+
+ArcadeFrontend can also load a standalone `.ogv` as a full-screen theme background.
+
+Example config:
+```json
+{
+  "Name": "Example Game",
+  "Theme": {
+    "Type": "Video",
+    "Path": "themes/example/background.ogv"
+  }
+}
+```
+
+Video themes are intentionally simple:
+- the `.ogv` fills the whole viewport
+- the video loops automatically
+- there are no XML layout files or overlay assets
+
 # Making Game Themes
 
 This will most likely change, but using Godot:
@@ -44,6 +98,12 @@ This will most likely change, but using Godot:
   - [x] Allow "fall-back" themes (if no individual game theme is available)
     - If you put a theme in the top of the section (before the "items") that will be used as a default 
   - [ ] Setup a website where people can share themes.
+- [ ] Load Hyperspin themes
+  - [x] Very basic support. No flash, haven't implemented all animations
+  - [ ] Figure out and implement all animations
+- [x] Load video themes
+  - [x] Can load videos as a fullscreen theme (useful for grabbing Video themes from [emumovies](https://emumovies.com))
+  - [ ] I'm sure we can do more here
 - [x] Exit back to menu when game exits
   - Program pauses when focus is lost
 - [ ] Controller navigation (haven't tested, it "might" work?)
@@ -61,13 +121,16 @@ This will most likely change, but using Godot:
 
 ## Development
 - [ ] Setup [pre-commit](https://pre-commit.com) hooks
-  - [ ] Find aa good C# linter
+  - [ ] Find a good C# linter
 - [ ] Auto-builds via Github Actions
   - [ ] Create an AppImage
 
 ## Wishlist
 - [ ] No need to setup the `config.json` by hand.
-- [ ] Bring up an overlay on top of running games - Something like the Guide button on Xbox (not sure if this is possible)   
+  - [ ] Working on a clean database that will scan games and organize everything
+  - [ ] The goal is for the `config.json` to be an override for themes instead. 
+- [ ] Bring up an overlay on top of running games - Something like the Guide button on Xbox (not sure if this is possible)
+- [ ] Get retroarch cores to run directly in app (crazy idea)
 
 # Useful Developer commands:
 

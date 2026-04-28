@@ -90,6 +90,30 @@
           "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/snes9x_libretro.so \"/ROMs/snes/DonkeyKongCountry2.sfc\""
         }
       ]
+    },
+    {
+      "Name": "Arcade",
+      "LogoLocation": "/ROMs/GameArtwork/Logos/arcade.png",
+      "Items": [
+        {
+          "Name": "Metal Slug X",
+          "LogoLocation": "/ROMs/GameArtwork/Logos/Metal Slug X.png",
+          "Theme": {
+            "Type": "HyperSpin",
+            "Path": "themes/MetalSlugX/Theme.xml",
+            "Video": "themes/MetalSlugX/video.ogv"
+          },
+          "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/fbneo_libretro.so \"/ROMs/arcade/Metal Slug X.zip\""
+        },
+        {
+          "Name": "Video Theme Example",
+          "LogoLocation": "/ROMs/GameArtwork/Logos/arcade.png",
+          "Theme": {
+            "Type": "Video",
+            "Path": "themes/example/background.ogv"
+          }
+        }
+      ]
     }
   ]
 }

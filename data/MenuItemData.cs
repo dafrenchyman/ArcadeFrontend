@@ -10,6 +10,7 @@ public class MenuItemData
 	public string? Description { get; set; }
 	public string? Poster { get; set; }
 	public string? LogoLocation { get; set; }
+	public ThemeDefinition? Theme { get; set; }
 	public string? ThemePck { get; set; }
 	public string? ThemeFile { get; set; }
 
@@ -17,6 +18,26 @@ public class MenuItemData
 	public string? LaunchCommand { get; set; }
 	public string? MenuType { get; set; }
 	public List<MenuItemData> Items { get; set; } = new();
+
+	public ThemeDefinition? GetResolvedTheme()
+	{
+		if (Theme != null && Theme.IsValid())
+		{
+			return Theme.Normalize();
+		}
+
+		if (!string.IsNullOrWhiteSpace(ThemePck) || !string.IsNullOrWhiteSpace(ThemeFile))
+		{
+			return new ThemeDefinition
+			{
+				Type = ThemeType.Godot,
+				Pck = ThemePck,
+				Path = ThemeFile,
+			};
+		}
+
+		return null;
+	}
 	
 	private static int Wrap(int index, int length) => ((index % length) + length) % length;
     

@@ -13,5 +13,5 @@ public class ItemInformationData
     public bool? Coop { get; set; }
     public List<string>? Developers { get; set; }
     public List<string>? Publishers { get; set; } 
-    public List<ItemInformationData> Versions { get; set; } = new();
+    public List<Version> Versions { get; set; } = new();
 }

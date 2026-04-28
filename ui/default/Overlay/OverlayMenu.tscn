@@ -1,17 +1,77 @@
-[gd_scene load_steps=5 format=3 uid="uid://cy1hit6sw1vwj"]
+[gd_scene load_steps=10 format=3 uid="uid://cy1hit6sw1vwj"]
 
 [ext_resource type="Script" uid="uid://dehgfwnt2j4ll" path="res://ui/default/Overlay/OverlayMenu.cs" id="1_joh5s"]
 [ext_resource type="Script" uid="uid://c7au4u02cg2o6" path="res://ui/default/Overlay/ItemInformation.cs" id="2_tokd2"]
 [ext_resource type="Shader" uid="uid://dehg07wvd340c" path="res://blurShader.gdshader" id="3_1u3aa"]
+[ext_resource type="Texture2D" uid="uid://b0syet53w375k" path="res://ui/assets/images/icon_play.svg" id="4_tokd2"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_x370m"]
 shader = ExtResource("3_1u3aa")
 shader_parameter/radius_px = 4.0
 shader_parameter/samples = 4
 
-[node name="OverlayMenu" type="CanvasLayer" node_paths=PackedStringArray("playButton", "itemInformation")]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tokd2"]
+bg_color = Color(1, 0.443137, 0.807843, 0.627451)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+corner_radius_top_left = 64
+corner_radius_top_right = 64
+corner_radius_bottom_right = 64
+corner_radius_bottom_left = 64
+expand_margin_left = 20.0
+expand_margin_right = 5.0
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1u3aa"]
+bg_color = Color(0.129412, 0.137255, 0.184314, 0.627451)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+corner_radius_top_left = 64
+corner_radius_top_right = 64
+corner_radius_bottom_right = 64
+corner_radius_bottom_left = 64
+expand_margin_left = 20.0
+expand_margin_right = 5.0
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a8q2x"]
+bg_color = Color(0.72549, 0.403922, 1, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+corner_radius_top_left = 64
+corner_radius_top_right = 64
+corner_radius_bottom_right = 64
+corner_radius_bottom_left = 64
+expand_margin_left = 20.0
+expand_margin_right = 5.0
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cinoq"]
+bg_color = Color(1, 0.443137, 0.807843, 0.392157)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.054902, 0.0392157, 0.101961, 1)
+corner_radius_top_left = 64
+corner_radius_top_right = 64
+corner_radius_bottom_right = 64
+corner_radius_bottom_left = 64
+expand_margin_left = 20.0
+expand_margin_right = 5.0
+shadow_size = 5
+
+[node name="OverlayMenu" type="CanvasLayer" node_paths=PackedStringArray("playButton", "optionsButton", "OptionsPopup", "itemInformation")]
 script = ExtResource("1_joh5s")
 playButton = NodePath("ItemInformation/Information/Options/Play")
+optionsButton = NodePath("ItemInformation/Information/Options/OptionsMenu")
+OptionsPopup = NodePath("ItemInformation/Information/Options/OptionsMenu/OptionsPopup")
 itemInformation = NodePath("ItemInformation")
 
 [node name="ItemInformation" type="Control" parent="."]
@@ -106,16 +166,28 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Play" type="Button" parent="ItemInformation/Information/Options"]
-layout_mode = 0
-offset_right = 304.0
-offset_bottom = 115.0
-focus_neighbor_right = NodePath("../Options")
-theme_override_colors/icon_focus_color = Color(1, 1, 1, 1)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.054
+anchor_top = 0.005
+anchor_right = 0.13
+anchor_bottom = 0.585
+offset_left = 0.32
+offset_top = 0.0603997
+offset_right = 0.399979
+offset_bottom = 0.0667648
+focus_neighbor_right = NodePath("../OptionsMenu")
+theme_override_colors/icon_focus_color = Color(0.980392, 0.980392, 0.980392, 1)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 44
-text = "Play Game"
+theme_override_styles/focus = SubResource("StyleBoxFlat_tokd2")
+theme_override_styles/hover = SubResource("StyleBoxFlat_1u3aa")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_a8q2x")
+theme_override_styles/normal = SubResource("StyleBoxFlat_cinoq")
+text = "Play"
+icon = ExtResource("4_tokd2")
 
-[node name="Options" type="Button" parent="ItemInformation/Information/Options"]
+[node name="OptionsMenu" type="MenuButton" parent="ItemInformation/Information/Options"]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.162
@@ -124,4 +196,12 @@ anchor_bottom = 0.623
 grow_horizontal = 2
 grow_vertical = 2
 focus_neighbor_left = NodePath("../Play")
+focus_mode = 2
+theme_type_variation = &"FlatButton"
 text = "Options"
+
+[node name="OptionsPopup" type="PopupMenu" parent="ItemInformation/Information/Options/OptionsMenu"]
+initial_position = 2
+visible = true
+
+[node name="PopupMenu" type="PopupMenu" parent="ItemInformation/Information/Options/OptionsMenu"]

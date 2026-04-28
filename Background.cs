@@ -35,15 +35,22 @@ public partial class Background : Control
 	{
 		if (_currentThemeInstance != null)
 		{
+			UnloadUtil.ClearResourceRefs(_currentThemeInstance);
 			RemoveChild(_currentThemeInstance);
 			_currentThemeInstance.QueueFree();
 			_currentThemeInstance = null;
 		}
 	}
 	
-	public async void ChangeTheme(string pckPath, string tscnPath)
+	public async void ChangeTheme(ThemeDefinition? theme)
 	{
-		GD.Print($"Switching to theme: {pckPath} → {tscnPath}");
+		if (theme == null)
+		{
+			UnloadCurrentTheme();
+			return;
+		}
+
+		GD.Print($"Switching to theme: {theme.NormalizedType()} → {theme.Path}");
 
 		// Fade to black
 		//await Fade(true);
@@ -51,19 +58,91 @@ public partial class Background : Control
 		// Remove current theme
 		UnloadCurrentTheme();
 
-		// Load .pck file
-		if (!ThemeManager.Instance.LoadThemePack(pckPath))
+		string? themeType = theme.NormalizedType();
+		if (string.Equals(themeType, ThemeType.HyperSpin, StringComparison.OrdinalIgnoreCase))
+		{
+			LoadHyperSpinTheme(theme.Path, theme.Video);
+			return;
+		}
+
+		if (string.Equals(themeType, ThemeType.Video, StringComparison.OrdinalIgnoreCase))
+		{
+			LoadVideoTheme(theme.Path);
+			return;
+		}
+
+			LoadGodotTheme(theme.Pck, theme.Path);
+
+		// Fade in
+		//await Fade(false);
+	}
+
+	private void LoadHyperSpinTheme(string? themePath, string? videoPath)
+	{
+		if (string.IsNullOrWhiteSpace(themePath))
+		{
+			GD.PushError("HyperSpin theme path is missing.");
+			return;
+		}
+
+		try
+		{
+			var themeDefinition = HyperSpinThemeLoader.Load(themePath, videoPath);
+			var host = new HyperSpinThemeHost();
+			host.ZIndex = -4_000;
+			AddChild(host);
+			host.LoadTheme(themeDefinition);
+			_currentThemeInstance = host;
+		}
+		catch (Exception exception)
+		{
+			GD.PushError($"Failed to load HyperSpin theme '{themePath}': {exception.Message}");
+		}
+	}
+
+	private void LoadVideoTheme(string? videoPath)
+	{
+		if (string.IsNullOrWhiteSpace(videoPath))
+		{
+			GD.PushError("Video theme path is missing.");
+			return;
+		}
+
+		string resolvedVideoPath = Utils.ResolvePath(videoPath);
+		if (!System.IO.File.Exists(resolvedVideoPath))
+		{
+			GD.PushError($"Video theme file not found: {resolvedVideoPath}");
+			return;
+		}
+
+		var host = new VideoThemeHost();
+		host.ZIndex = -4_000;
+		AddChild(host);
+		host.LoadTheme(resolvedVideoPath);
+		_currentThemeInstance = host;
+	}
+
+	private void LoadGodotTheme(string? pckPath, string? tscnPath)
+	{
+		if (string.IsNullOrWhiteSpace(tscnPath))
+		{
+			GD.PushError("Godot theme path is missing.");
+			return;
+		}
+
+		if (!string.IsNullOrWhiteSpace(pckPath) && !ThemeManager.Instance.LoadThemePack(pckPath))
 		{
 			GD.PushError($"Failed to load PCK: {pckPath}");
 			return;
 		}
 
-		// Load .tscn from the pck
-		string fullTscnPath = tscnPath + "/theme.tscn";
+		string fullTscnPath = tscnPath.EndsWith(".tscn", StringComparison.OrdinalIgnoreCase)
+			? tscnPath
+			: tscnPath + "/theme.tscn";
 		var scene = GD.Load<PackedScene>(fullTscnPath);
 		if (scene == null)
 		{
-			GD.PushError($"Failed to load scene: {tscnPath}");
+			GD.PushError($"Failed to load scene: {fullTscnPath}");
 			return;
 		}
 
@@ -76,9 +155,6 @@ public partial class Background : Control
 		//_currentThemeInstance.SetAnchorsPreset(Control.LayoutPreset.FullRect);
 		AddChild(_currentThemeInstance);
 		//MoveChild(_currentThemeInstance, -1_000); // Put it behind everything else
-
-		// Fade in
-		//await Fade(false);
 	}
 	
 

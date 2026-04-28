@@ -432,6 +432,8 @@ public partial class Wheel : CanvasLayer
 	{
 		var path = new MenuPath(new[] { -_currIndex });
 		MenuItemData menuItem = _menuData.GetMenuItem(path);
+		ThemeDefinition? selectedTheme = menuItem.GetResolvedTheme();
+		ThemeDefinition? fallbackTheme = this._menuData.GetResolvedTheme();
 				
 		// Add item name to screen
 		if (menuItem.Name != null)
@@ -444,14 +446,18 @@ public partial class Wheel : CanvasLayer
 		}
 				
 		// Call theme switch
-		if (menuItem.ThemeFile != null)
+		if (selectedTheme != null)
 		{
-			_background.ChangeTheme(menuItem.ThemePck, menuItem.ThemeFile);    
+			_background.ChangeTheme(selectedTheme);    
 		}
 		// Load a default if available
-		else if (this._menuData.ThemeFile != null) 
+		else if (fallbackTheme != null) 
 		{
-			_background.ChangeTheme(this._menuData.ThemePck, this._menuData.ThemeFile);
+			_background.ChangeTheme(fallbackTheme);
+		}
+		else
+		{
+			_background.ChangeTheme(null);
 		}
 	}
 	

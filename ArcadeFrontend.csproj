@@ -7,6 +7,7 @@
     <Content Include="BlurTest.tscn" />
     <Content Include="config.json" />
     <Content Include="config_example.json" />
+    <Content Include="convert_videos.sh" />
     <Content Include="default.nix" />
     <Content Include="LICENSE" />
     <Content Include="nixos_runner.sh" />
@@ -17,5 +18,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="ui\assets\images\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="inputs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="inputs\**" />
   </ItemGroup>
 </Project>
