@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -18,43 +19,88 @@ public static class HyperSpinThemeLoader
 			throw new FileNotFoundException($"HyperSpin theme XML not found: {absoluteThemePath}");
 		}
 
+		if (string.Equals(Path.GetExtension(absoluteThemePath), ".zip", StringComparison.OrdinalIgnoreCase))
+		{
+			return LoadFromZip(absoluteThemePath, videoOverridePath);
+		}
+
+		return LoadFromDirectory(absoluteThemePath, videoOverridePath);
+	}
+
+	private static HyperSpinThemeDefinition LoadFromDirectory(string absoluteThemePath, string? videoOverridePath)
+	{
 		string assetRoot = Path.GetDirectoryName(absoluteThemePath) ?? throw new InvalidOperationException("Theme XML must have a parent directory.");
 		var document = XDocument.Load(absoluteThemePath);
-		var root = document.Root ?? throw new InvalidOperationException("Theme XML is missing a root element.");
+		return BuildTheme(
+			document,
+			absoluteThemePath,
+			assetRoot,
+			relativePath => Utils.LoadExternalImage(Path.Combine(assetRoot, relativePath)),
+			() => ResolveVideoPath(assetRoot, videoOverridePath, allowSiblingVideo: true));
+	}
 
+	private static HyperSpinThemeDefinition LoadFromZip(string zipPath, string? videoOverridePath)
+	{
+		using var archive = ZipFile.OpenRead(zipPath);
+		ZipArchiveEntry themeXmlEntry = FindThemeXmlEntry(archive)
+			?? throw new FileNotFoundException($"Theme.xml not found inside HyperSpin zip: {zipPath}");
+
+		using var themeStream = themeXmlEntry.Open();
+		var document = XDocument.Load(themeStream);
+		string xmlDirectory = GetEntryDirectory(themeXmlEntry.FullName);
+		string assetRoot = $"{zipPath}!/{xmlDirectory}".TrimEnd('/');
+
+		return BuildTheme(
+			document,
+			$"{zipPath}!/{NormalizeZipPath(themeXmlEntry.FullName)}",
+			assetRoot,
+			relativePath => LoadZipImage(archive, CombineZipPath(xmlDirectory, relativePath)),
+			() => ResolveVideoPath(zipPath, videoOverridePath, allowSiblingVideo: false));
+	}
+
+	private static HyperSpinThemeDefinition BuildTheme(
+		XDocument document,
+		string themeXmlPath,
+		string assetRoot,
+		Func<string, Texture2D?> loadImage,
+		Func<string?> resolveVideoPath)
+	{
+		var root = document.Root ?? throw new InvalidOperationException("Theme XML is missing a root element.");
 		var theme = new HyperSpinThemeDefinition
 		{
-			ThemeXmlPath = absoluteThemePath,
+			ThemeXmlPath = themeXmlPath,
 			AssetRoot = assetRoot,
 		};
 
-		string backgroundPath = Path.Combine(assetRoot, "Background.png");
-		if (File.Exists(backgroundPath))
-		{
-			theme.BackgroundPath = backgroundPath;
-		}
-		else
+		theme.BackgroundTexture = loadImage("Background.png");
+		if (theme.BackgroundTexture == null)
 		{
 			theme.Warnings.Add("Background.png not found; theme will render without a background.");
 		}
 
 		foreach (XElement element in root.Elements())
 		{
-				string name = element.Name.LocalName;
-				if (string.Equals(name, "video", StringComparison.OrdinalIgnoreCase))
-				{
-					theme.Video = ParseVideo(assetRoot, element, videoOverridePath, theme.Warnings);
-					continue;
-				}
+			string name = element.Name.LocalName;
+			if (string.Equals(name, "video", StringComparison.OrdinalIgnoreCase))
+			{
+				theme.Video = ParseVideo(element, resolveVideoPath(), loadImage("Video.png"), theme.Warnings);
+				continue;
+			}
 
 			if (name.StartsWith("artwork", StringComparison.OrdinalIgnoreCase))
 			{
-				HyperSpinThemeElement? artwork = ParseArtwork(assetRoot, name, element, theme.Warnings);
+				HyperSpinThemeElement? artwork = ParseArtwork(name, element, theme.Warnings, loadImage);
 				if (artwork != null)
 				{
 					theme.Artworks.Add(artwork);
 				}
 
+				continue;
+			}
+
+			if (string.Equals(name, "particle", StringComparison.OrdinalIgnoreCase))
+			{
+				theme.Particle = ParseParticle(element, loadImage("Particle.png"), theme.Warnings);
 				continue;
 			}
 
@@ -68,9 +114,8 @@ public static class HyperSpinThemeLoader
 		return theme;
 	}
 
-	private static HyperSpinThemeElement ParseVideo(string assetRoot, XElement element, string? videoOverridePath, List<string> warnings)
+	private static HyperSpinThemeElement ParseVideo(XElement element, string? resolvedVideoPath, Texture2D? overlayTexture, List<string> warnings)
 	{
-		string? resolvedVideoPath = ResolveVideoPath(assetRoot, videoOverridePath);
 		if (string.IsNullOrWhiteSpace(resolvedVideoPath))
 		{
 			warnings.Add("No HyperSpin video asset found; theme video region will be skipped.");
@@ -80,6 +125,9 @@ public static class HyperSpinThemeLoader
 		{
 			Name = "video",
 			AssetPath = resolvedVideoPath,
+			OverlayTexture = overlayTexture,
+			OverlayOffset = new Vector2(ParseFloat(element, "overlayoffsetx", 0.0f), ParseFloat(element, "overlayoffsety", 0.0f)),
+			OverlayBelow = ParseBool(element, "overlaybelow", false),
 			Center = new Vector2(ParseFloat(element, "x", 0.0f), ParseFloat(element, "y", 0.0f)),
 			Size = new Vector2(ParseFloat(element, "w", 0.0f), ParseFloat(element, "h", 0.0f)),
 			RotationDegrees = NormalizeRotation(ParseFloat(element, "r", 0.0f)),
@@ -104,7 +152,7 @@ public static class HyperSpinThemeLoader
 		return video;
 	}
 
-	private static string? ResolveVideoPath(string assetRoot, string? videoOverridePath)
+	private static string? ResolveVideoPath(string assetRoot, string? videoOverridePath, bool allowSiblingVideo)
 	{
 		if (!string.IsNullOrWhiteSpace(videoOverridePath))
 		{
@@ -115,31 +163,66 @@ public static class HyperSpinThemeLoader
 			}
 		}
 
+		if (!allowSiblingVideo)
+		{
+			return null;
+		}
+
 		string siblingVideoPath = Path.Combine(assetRoot, "video.ogv");
 		return File.Exists(siblingVideoPath) ? siblingVideoPath : null;
 	}
 
-	private static HyperSpinThemeElement? ParseArtwork(string assetRoot, string name, XElement element, List<string> warnings)
+	private static HyperSpinParticleDefinition? ParseParticle(XElement element, Texture2D? particleTexture, List<string> warnings)
 	{
-		string artworkNumber = name["artwork".Length..];
-		string assetPath = Path.Combine(assetRoot, $"Artwork{artworkNumber}.png");
-		if (!File.Exists(assetPath))
+		if (!ParseBool(element, "onoff", true))
 		{
-			warnings.Add($"{Path.GetFileName(assetPath)} not found; {name} will be skipped.");
 			return null;
 		}
 
-		Vector2 size = Vector2.Zero;
-		var texture = Utils.LoadExternalImage(assetPath);
-		if (texture != null)
+		if (particleTexture == null)
 		{
-			size = texture.GetSize();
-		}
-		else
-		{
-			warnings.Add($"{Path.GetFileName(assetPath)} could not be loaded; {name} will be skipped.");
+			warnings.Add("Particle.png not found; particle emitter will be skipped.");
 			return null;
 		}
+
+		foreach (XAttribute attribute in element.Attributes())
+		{
+			if (!SupportedParticleAttributes.Contains(attribute.Name.LocalName))
+			{
+				warnings.Add($"Unsupported particle attribute '{attribute.Name.LocalName}' ignored.");
+			}
+		}
+
+		return new HyperSpinParticleDefinition
+		{
+			Texture = particleTexture,
+			Depth = ParseString(element, "depth", "background"),
+			ParticlesOnTop = ParseBool(element, "particlesontop", true),
+			SpawnIntervalMs = Mathf.Max(ParseFloat(element, "ppm", 250.0f), 1.0f),
+			EmitterPosition = new Vector2(ParseFloat(element, "x", 0.0f), ParseFloat(element, "y", 0.0f)),
+			EmitterSize = new Vector2(ParseFloat(element, "width", 1.0f), ParseFloat(element, "height", 1.0f)),
+			MovementEnabled = ParseBool(element, "movement", true),
+			SpeedRange = ParseRange(element, "speed", 0.0f, 0.0f),
+			AngleRange = ParseRange(element, "angle", 0.0f, 0.0f),
+			StartScaleRange = ParseRange(element, "startScale", 1.0f, 1.0f),
+			Gravity = ParseFloat(element, "gravity", 0.0f),
+			FadeMs = Mathf.Max(ParseFloat(element, "fade", 0.0f), 0.0f),
+			LifespanMs = Mathf.Max(ParseFloat(element, "lifespan", 4000.0f), 1.0f),
+		};
+	}
+
+	private static HyperSpinThemeElement? ParseArtwork(string name, XElement element, List<string> warnings, Func<string, Texture2D?> loadImage)
+	{
+		string artworkNumber = name["artwork".Length..];
+		string assetName = $"Artwork{artworkNumber}.png";
+		Texture2D? texture = loadImage(assetName);
+		if (texture == null)
+		{
+			warnings.Add($"{assetName} not found; {name} will be skipped.");
+			return null;
+		}
+
+		Vector2 size = texture.GetSize();
 
 		foreach (XAttribute attribute in element.Attributes())
 		{
@@ -152,7 +235,7 @@ public static class HyperSpinThemeLoader
 		return new HyperSpinThemeElement
 		{
 			Name = name,
-			AssetPath = assetPath,
+			Texture = texture,
 			Center = new Vector2(ParseFloat(element, "x", 0.0f), ParseFloat(element, "y", 0.0f)),
 			Size = size,
 			RotationDegrees = NormalizeRotation(ParseFloat(element, "r", 0.0f)),
@@ -163,6 +246,56 @@ public static class HyperSpinThemeLoader
 			Effects = ParseEffects(element),
 			IsVideo = false,
 		};
+	}
+
+	private static Texture2D? LoadZipImage(ZipArchive archive, string entryPath)
+	{
+		ZipArchiveEntry? entry = FindEntryCaseInsensitive(archive, entryPath);
+		if (entry == null)
+		{
+			return null;
+		}
+
+		using var stream = entry.Open();
+		using var memory = new MemoryStream();
+		stream.CopyTo(memory);
+		return Utils.LoadImageFromBuffer(memory.ToArray(), entry.Name);
+	}
+
+	private static ZipArchiveEntry? FindThemeXmlEntry(ZipArchive archive)
+	{
+		return archive.Entries
+			.Where(entry => string.Equals(Path.GetFileName(entry.FullName), "Theme.xml", StringComparison.OrdinalIgnoreCase))
+			.OrderBy(entry => NormalizeZipPath(entry.FullName).Count(character => character == '/'))
+			.FirstOrDefault();
+	}
+
+	private static ZipArchiveEntry? FindEntryCaseInsensitive(ZipArchive archive, string entryPath)
+	{
+		string normalizedPath = NormalizeZipPath(entryPath);
+		return archive.Entries.FirstOrDefault(entry =>
+			string.Equals(NormalizeZipPath(entry.FullName), normalizedPath, StringComparison.OrdinalIgnoreCase));
+	}
+
+	private static string GetEntryDirectory(string entryPath)
+	{
+		string normalizedPath = NormalizeZipPath(entryPath);
+		int separatorIndex = normalizedPath.LastIndexOf('/');
+		return separatorIndex >= 0 ? normalizedPath[..separatorIndex] : string.Empty;
+	}
+
+	private static string CombineZipPath(string directory, string relativePath)
+	{
+		string normalizedDirectory = NormalizeZipPath(directory);
+		string normalizedRelativePath = NormalizeZipPath(relativePath);
+		return string.IsNullOrWhiteSpace(normalizedDirectory)
+			? normalizedRelativePath
+			: $"{normalizedDirectory}/{normalizedRelativePath}";
+	}
+
+	private static string NormalizeZipPath(string path)
+	{
+		return path.Replace('\\', '/').TrimStart('/');
 	}
 
 	private static HashSet<string> ParseEffects(XElement element)
@@ -183,6 +316,21 @@ public static class HyperSpinThemeLoader
 		}
 
 		return value.Trim().ToLowerInvariant();
+	}
+
+	private static bool ParseBool(XElement element, string attributeName, bool defaultValue)
+	{
+		string normalized = ParseString(element, attributeName, defaultValue ? "true" : "false");
+		return normalized switch
+		{
+			"true" => true,
+			"yes" => true,
+			"1" => true,
+			"false" => false,
+			"no" => false,
+			"0" => false,
+			_ => defaultValue,
+		};
 	}
 
 	private static float ParseFloat(XElement element, string attributeName, float defaultValue)
@@ -215,6 +363,30 @@ public static class HyperSpinThemeLoader
 		}
 
 		return defaultValue;
+	}
+
+	private static Vector2 ParseRange(XElement element, string attributeName, float defaultMin, float defaultMax)
+	{
+		string? value = element.Attribute(attributeName)?.Value;
+		if (string.IsNullOrWhiteSpace(value))
+		{
+			return new Vector2(defaultMin, defaultMax);
+		}
+
+		string[] parts = value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+		if (parts.Length == 1 && float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float single))
+		{
+			return new Vector2(single, single);
+		}
+
+		if (parts.Length >= 2
+			&& float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float min)
+			&& float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float max))
+		{
+			return new Vector2(min, max);
+		}
+
+		return new Vector2(defaultMin, defaultMax);
 	}
 
 	private static List<HyperSpinBorderLayer> ParseBorderLayers(XElement element)
@@ -289,5 +461,34 @@ public static class HyperSpinThemeLoader
 		"bcolor2",
 		"bcolor3",
 		"bshape",
+	};
+
+	private static readonly HashSet<string> SupportedParticleAttributes = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"onoff",
+		"depth",
+		"ppm",
+		"x",
+		"y",
+		"width",
+		"height",
+		"movement",
+		"speed",
+		"angle",
+		"randomframe",
+		"startscale",
+		"limit",
+		"gravity",
+		"accel",
+		"fade",
+		"bound",
+		"pointswarm",
+		"xoscillate",
+		"rotate",
+		"scale",
+		"lifespan",
+		"particlesontop",
+		"blendmode",
+		"rotatetoangle",
 	};
 }

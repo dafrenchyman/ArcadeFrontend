@@ -7,6 +7,24 @@ namespace ArcadeFrontend;
 
 public partial class HyperSpinThemeHost : Control
 {
+	private sealed class ParticleEmitterRuntime
+	{
+		public Node2D Container { get; init; }
+		public HyperSpinParticleDefinition Definition { get; init; }
+		public double SpawnAccumulatorMs { get; set; }
+		public List<ParticleInstanceRuntime> Particles { get; } = new();
+	}
+
+	private sealed class ParticleInstanceRuntime
+	{
+		public Sprite2D Sprite { get; init; }
+		public Vector2 Velocity { get; set; }
+		public float GravityPerSecond { get; init; }
+		public float LifetimeMs { get; init; }
+		public float FadeMs { get; init; }
+		public double AgeMs { get; set; }
+	}
+
 private const string IntroEffectShaderCode = @"
 shader_type canvas_item;
 
@@ -67,6 +85,7 @@ void fragment() {
 
 	private Control _canvas;
 	private HyperSpinThemeDefinition _theme;
+	private readonly List<ParticleEmitterRuntime> _particleEmitters = new();
 
 	public override void _Ready()
 	{
@@ -92,6 +111,19 @@ void fragment() {
 		}
 	}
 
+	public override void _Process(double delta)
+	{
+		if (_particleEmitters.Count == 0)
+		{
+			return;
+		}
+
+		foreach (ParticleEmitterRuntime emitter in _particleEmitters)
+		{
+			UpdateParticleEmitter(emitter, delta);
+		}
+	}
+
 	public void LoadTheme(HyperSpinThemeDefinition theme)
 	{
 		_theme = theme;
@@ -109,6 +141,8 @@ void fragment() {
 
 	private void RenderTheme()
 	{
+		_particleEmitters.Clear();
+
 		foreach (Node child in _canvas.GetChildren())
 		{
 			child.QueueFree();
@@ -127,19 +161,10 @@ void fragment() {
 			}
 		}
 
-		if (!string.IsNullOrWhiteSpace(_theme.BackgroundPath))
+		var renderQueue = new List<(string key, Action render)>();
+		if (_theme.BackgroundTexture != null)
 		{
-			ImageTexture? backgroundTexture = Utils.LoadExternalImage(_theme.BackgroundPath);
-			if (backgroundTexture != null)
-			{
-				var background = new TextureRect();
-				background.Name = "Background";
-				background.Texture = backgroundTexture;
-				background.Position = Vector2.Zero;
-				background.Size = new Vector2(HyperSpinThemeDefinition.BaseWidth, HyperSpinThemeDefinition.BaseHeight);
-				background.StretchMode = TextureRect.StretchModeEnum.Scale;
-				_canvas.AddChild(background);
-			}
+			renderQueue.Add(("background", AddBackgroundNode));
 		}
 
 		HyperSpinThemeElement? backdropArtwork = _theme.Artworks
@@ -150,22 +175,30 @@ void fragment() {
 
 		if (_theme.Video != null && string.Equals(_theme.Video.Below, "yes", StringComparison.OrdinalIgnoreCase))
 		{
-			AddVideoNode(_theme.Video);
+			renderQueue.Add(("video", () => AddVideoNode(_theme.Video)));
 		}
 
 		if (backdropArtwork != null)
 		{
-			AddArtworkNode(backdropArtwork);
+			renderQueue.Add(("artwork1", () => AddArtworkNode(backdropArtwork)));
 		}
 
 		if (_theme.Video != null && !string.Equals(_theme.Video.Below, "yes", StringComparison.OrdinalIgnoreCase))
 		{
-			AddVideoNode(_theme.Video);
+			renderQueue.Add(("video", () => AddVideoNode(_theme.Video)));
 		}
 
 		foreach (HyperSpinThemeElement artwork in foregroundArtwork)
 		{
-			AddArtworkNode(artwork);
+			string key = artwork.Name.ToLowerInvariant();
+			renderQueue.Add((key, () => AddArtworkNode(artwork)));
+		}
+
+		InsertParticleRender(renderQueue, _theme.Particle);
+
+		foreach ((string _, Action render) in renderQueue)
+		{
+			render();
 		}
 	}
 
@@ -185,24 +218,29 @@ void fragment() {
 
 	private Control? CreateArtworkNode(HyperSpinThemeElement element)
 	{
-		if (string.IsNullOrWhiteSpace(element.AssetPath))
-		{
-			return null;
-		}
-
-		ImageTexture? texture = Utils.LoadExternalImage(element.AssetPath);
-		if (texture == null)
+		if (element.Texture == null)
 		{
 			return null;
 		}
 
 		var node = new TextureRect();
 		node.Name = element.Name;
-		node.Texture = texture;
+		node.Texture = element.Texture;
 		node.StretchMode = TextureRect.StretchModeEnum.Scale;
-		node.Size = texture.GetSize();
+		node.Size = element.Texture.GetSize();
 		ApplyLayout(node, element);
 		return node;
+	}
+
+	private void AddBackgroundNode()
+	{
+		var background = new TextureRect();
+		background.Name = "Background";
+		background.Texture = _theme.BackgroundTexture;
+		background.Position = Vector2.Zero;
+		background.Size = new Vector2(HyperSpinThemeDefinition.BaseWidth, HyperSpinThemeDefinition.BaseHeight);
+		background.StretchMode = TextureRect.StretchModeEnum.Scale;
+		_canvas.AddChild(background);
 	}
 
 	private Control? CreateVideoNode(HyperSpinThemeElement element)
@@ -213,15 +251,52 @@ void fragment() {
 		}
 
 		float maxOffset = element.BorderLayers.Count > 0 ? element.BorderLayers.Max(layer => layer.Offset) : 0.0f;
-		Vector2 containerSize = element.Size + new Vector2(2.0f * maxOffset, 2.0f * maxOffset);
+		Vector2 baseVideoPosition = new Vector2(maxOffset, maxOffset);
+		Vector2 overlaySize = element.OverlayTexture?.GetSize() ?? Vector2.Zero;
+		Vector2 baseOverlayPosition = baseVideoPosition;
+		if (element.OverlayTexture != null)
+		{
+			// HyperSpin's Video.png behaves like a frame centered around the video slot,
+			// with overlayoffsetx/y nudging that frame relative to the slot afterward.
+			baseOverlayPosition += ((element.Size - overlaySize) / 2.0f) + element.OverlayOffset;
+		}
+		Vector2 minBounds = Vector2.Zero;
+		Vector2 maxBounds = baseVideoPosition + element.Size;
+		if (element.OverlayTexture != null)
+		{
+			Vector2 overlayMax = baseOverlayPosition + overlaySize;
+			minBounds = new Vector2(
+				Mathf.Min(minBounds.X, baseOverlayPosition.X),
+				Mathf.Min(minBounds.Y, baseOverlayPosition.Y));
+			maxBounds = new Vector2(
+				Mathf.Max(maxBounds.X, overlayMax.X),
+				Mathf.Max(maxBounds.Y, overlayMax.Y));
+		}
+		else
+		{
+			minBounds = new Vector2(
+				Mathf.Min(minBounds.X, baseVideoPosition.X),
+				Mathf.Min(minBounds.Y, baseVideoPosition.Y));
+		}
+
+		Vector2 shift = -minBounds;
+		Vector2 videoPosition = baseVideoPosition + shift;
+		Vector2 overlayPositionWithShift = baseOverlayPosition + shift;
+		Vector2 localVideoCenter = videoPosition + (element.Size / 2.0f);
+		Vector2 containerSize = maxBounds - minBounds;
 		var container = new Control();
 		container.Name = element.Name;
 		container.Size = containerSize;
 		container.MouseFilter = MouseFilterEnum.Ignore;
 
-		foreach (Panel borderPanel in CreateBorderBands(element, maxOffset))
+		foreach (Panel borderPanel in CreateBorderBands(element, maxOffset, shift))
 		{
 			container.AddChild(borderPanel);
+		}
+
+		if (element.OverlayBelow)
+		{
+			AddVideoOverlay(container, element, overlayPositionWithShift);
 		}
 
 		var stream = new VideoStreamTheora();
@@ -235,10 +310,15 @@ void fragment() {
 		video.Loop = true;
 		video.MouseFilter = MouseFilterEnum.Ignore;
 		video.Size = element.Size;
-		video.Position = new Vector2(maxOffset, maxOffset);
+		video.Position = videoPosition;
 		container.AddChild(video);
 
-		ApplyLayout(container, element, containerSize);
+		if (!element.OverlayBelow)
+		{
+			AddVideoOverlay(container, element, overlayPositionWithShift);
+		}
+
+		ApplyVideoLayout(container, element, containerSize, localVideoCenter);
 		return container;
 	}
 
@@ -248,6 +328,14 @@ void fragment() {
 		node.Size = size;
 		node.Position = element.Center - (size / 2.0f);
 		node.PivotOffset = size / 2.0f;
+		node.Rotation = Mathf.DegToRad(element.RotationDegrees);
+	}
+
+	private void ApplyVideoLayout(Control node, HyperSpinThemeElement element, Vector2 containerSize, Vector2 localAnchorCenter)
+	{
+		node.Size = containerSize;
+		node.Position = element.Center - localAnchorCenter;
+		node.PivotOffset = localAnchorCenter;
 		node.Rotation = Mathf.DegToRad(element.RotationDegrees);
 	}
 
@@ -261,8 +349,9 @@ void fragment() {
 		float startingBlur = element.HasEffect("blur") ? 40.0f : 0.0f;
 		float startingPixelSize = element.HasEffect("pixelate") ? 50.0f : 1.0f;
 		float scanlineStrength = element.HasEffect("tv") ? 0.18f : 0.0f;
+		Vector2 startPosition = GetStartPosition(element, finalPosition);
 
-		node.Position = GetStartPosition(element, finalPosition);
+		node.Position = startPosition;
 		node.Scale = GetStartingScale(element, finalScale);
 		node.Modulate = element.HasEffect("fade")
 			? new Color(finalModulate.R, finalModulate.G, finalModulate.B, 0.0f)
@@ -286,9 +375,21 @@ void fragment() {
 		Tween.EaseType ease = GetEase(element);
 
 		tween.SetParallel(true);
-		tween.TweenProperty(node, "position", finalPosition, duration)
-			.SetEase(ease)
-			.SetTrans(transition);
+		if (element.HasEffect("rain"))
+		{
+			tween.TweenMethod(
+				Callable.From<float>(progress => node.Position = GetRainFloatPosition(element, startPosition, finalPosition, progress)),
+				0.0f,
+				1.0f,
+				duration
+			).SetEase(ease).SetTrans(transition);
+		}
+		else
+		{
+			tween.TweenProperty(node, "position", finalPosition, duration)
+				.SetEase(ease)
+				.SetTrans(transition);
+		}
 		tween.TweenProperty(node, "scale", finalScale, duration)
 			.SetEase(ease)
 			.SetTrans(transition);
@@ -332,6 +433,29 @@ void fragment() {
 		};
 	}
 
+	private Vector2 GetRainFloatPosition(HyperSpinThemeElement element, Vector2 startPosition, Vector2 finalPosition, float progress)
+	{
+		float clampedProgress = Mathf.Clamp(progress, 0.0f, 1.0f);
+		float remaining = 1.0f - clampedProgress;
+		float fallDistance = Mathf.Clamp(element.Size.Y * 0.22f, 36.0f, 96.0f);
+		float swayDistance = Mathf.Clamp(element.Size.X * 0.08f, 12.0f, 36.0f);
+		float floatDistance = element.HasEffect("float")
+			? Mathf.Clamp(element.Size.Y * 0.04f, 8.0f, 20.0f)
+			: 0.0f;
+		Vector2 rainStart = startPosition;
+
+		if (string.Equals(element.Start, "none", StringComparison.OrdinalIgnoreCase))
+		{
+			rainStart = finalPosition + new Vector2(-swayDistance * 0.5f, -fallDistance);
+		}
+
+		Vector2 position = rainStart.Lerp(finalPosition, clampedProgress);
+		float sway = Mathf.Sin(clampedProgress * Mathf.Pi * 2.5f) * swayDistance * remaining;
+		float bob = Mathf.Sin(clampedProgress * Mathf.Pi * 4.0f) * floatDistance * remaining;
+		position += new Vector2(sway, bob);
+		return position;
+	}
+
 	private void AddArtworkNode(HyperSpinThemeElement artwork)
 	{
 		Control? artworkNode = CreateArtworkNode(artwork);
@@ -354,6 +478,23 @@ void fragment() {
 
 		_canvas.AddChild(videoNode);
 		PlayIntro(videoNode, element);
+	}
+
+	private void AddParticleNode(HyperSpinParticleDefinition definition)
+	{
+		if (definition.Texture == null)
+		{
+			return;
+		}
+
+		var container = new Node2D();
+		container.Name = "Particles";
+		_canvas.AddChild(container);
+		_particleEmitters.Add(new ParticleEmitterRuntime
+		{
+			Container = container,
+			Definition = definition,
+		});
 	}
 
 	private Vector2 GetStartingScale(HyperSpinThemeElement element, Vector2 finalScale)
@@ -445,7 +586,144 @@ void fragment() {
 		return material;
 	}
 
-	private IEnumerable<Panel> CreateBorderBands(HyperSpinThemeElement element, float maxOffset)
+	private void InsertParticleRender(List<(string key, Action render)> renderQueue, HyperSpinParticleDefinition? particle)
+	{
+		if (particle == null || particle.Texture == null)
+		{
+			return;
+		}
+
+		int targetIndex = renderQueue.FindIndex(entry => string.Equals(entry.key, particle.Depth, StringComparison.OrdinalIgnoreCase));
+		if (targetIndex < 0)
+		{
+			targetIndex = 0;
+			while (targetIndex < renderQueue.Count && string.Equals(renderQueue[targetIndex].key, "background", StringComparison.OrdinalIgnoreCase))
+			{
+				targetIndex++;
+			}
+		}
+		else if (particle.ParticlesOnTop)
+		{
+			targetIndex++;
+		}
+
+		renderQueue.Insert(Mathf.Clamp(targetIndex, 0, renderQueue.Count), ("particle", () => AddParticleNode(particle)));
+	}
+
+	private void UpdateParticleEmitter(ParticleEmitterRuntime emitter, double delta)
+	{
+		double deltaMs = delta * 1000.0;
+		emitter.SpawnAccumulatorMs += deltaMs;
+
+		while (emitter.SpawnAccumulatorMs >= emitter.Definition.SpawnIntervalMs)
+		{
+			emitter.SpawnAccumulatorMs -= emitter.Definition.SpawnIntervalMs;
+			SpawnParticle(emitter);
+		}
+
+		for (int index = emitter.Particles.Count - 1; index >= 0; index--)
+		{
+			ParticleInstanceRuntime particle = emitter.Particles[index];
+			particle.AgeMs += deltaMs;
+			if (particle.AgeMs >= particle.LifetimeMs)
+			{
+				particle.Sprite.QueueFree();
+				emitter.Particles.RemoveAt(index);
+				continue;
+			}
+
+			float deltaSeconds = (float)delta;
+			particle.Velocity += new Vector2(0.0f, particle.GravityPerSecond * deltaSeconds);
+			particle.Sprite.Position += particle.Velocity * deltaSeconds;
+
+			float alpha = 1.0f;
+			if (particle.FadeMs > 0.0f)
+			{
+				alpha = Mathf.Clamp((float)((particle.LifetimeMs - particle.AgeMs) / particle.FadeMs), 0.0f, 1.0f);
+			}
+
+			Color modulate = particle.Sprite.Modulate;
+			modulate.A = alpha;
+			particle.Sprite.Modulate = modulate;
+		}
+	}
+
+	private void SpawnParticle(ParticleEmitterRuntime emitter)
+	{
+		HyperSpinParticleDefinition definition = emitter.Definition;
+		if (definition.Texture == null)
+		{
+			return;
+		}
+
+		var sprite = new Sprite2D();
+		sprite.Texture = definition.Texture;
+		sprite.Centered = true;
+		sprite.Position = GetRandomEmitterPoint(definition);
+
+		float startScale = (float)GD.RandRange(definition.StartScaleRange.X, definition.StartScaleRange.Y);
+		sprite.Scale = new Vector2(startScale, startScale);
+
+		if (definition.MovementEnabled)
+		{
+			float speed = (float)GD.RandRange(definition.SpeedRange.X, definition.SpeedRange.Y);
+			float angleDegrees = (float)GD.RandRange(definition.AngleRange.X, definition.AngleRange.Y);
+			float angleRadians = Mathf.DegToRad(angleDegrees);
+			Vector2 velocity = new Vector2(Mathf.Cos(angleRadians), Mathf.Sin(angleRadians)) * speed;
+			sprite.Rotation = angleRadians;
+			emitter.Particles.Add(new ParticleInstanceRuntime
+			{
+				Sprite = sprite,
+				Velocity = velocity,
+				GravityPerSecond = definition.Gravity * 120.0f,
+				LifetimeMs = definition.LifespanMs,
+				FadeMs = definition.FadeMs,
+			});
+		}
+		else
+		{
+			emitter.Particles.Add(new ParticleInstanceRuntime
+			{
+				Sprite = sprite,
+				Velocity = Vector2.Zero,
+				GravityPerSecond = 0.0f,
+				LifetimeMs = definition.LifespanMs,
+				FadeMs = definition.FadeMs,
+			});
+		}
+
+		emitter.Container.AddChild(sprite);
+	}
+
+	private Vector2 GetRandomEmitterPoint(HyperSpinParticleDefinition definition)
+	{
+		float randomX = definition.EmitterSize.X <= 1.0f
+			? 0.0f
+			: (float)GD.RandRange(0.0f, definition.EmitterSize.X);
+		float randomY = definition.EmitterSize.Y <= 1.0f
+			? 0.0f
+			: (float)GD.RandRange(0.0f, definition.EmitterSize.Y);
+		return definition.EmitterPosition + new Vector2(randomX, randomY);
+	}
+
+	private void AddVideoOverlay(Control container, HyperSpinThemeElement element, Vector2 overlayPosition)
+	{
+		if (element.OverlayTexture == null)
+		{
+			return;
+		}
+
+		var overlay = new TextureRect();
+		overlay.Name = "VideoOverlay";
+		overlay.Texture = element.OverlayTexture;
+		overlay.StretchMode = TextureRect.StretchModeEnum.Scale;
+		overlay.MouseFilter = MouseFilterEnum.Ignore;
+		overlay.Position = overlayPosition;
+		overlay.Size = element.OverlayTexture.GetSize();
+		container.AddChild(overlay);
+	}
+
+	private IEnumerable<Panel> CreateBorderBands(HyperSpinThemeElement element, float maxOffset, Vector2 shift)
 	{
 		for (int index = 0; index < element.BorderLayers.Count; index++)
 		{
@@ -460,7 +738,7 @@ void fragment() {
 			var panel = new Panel();
 			panel.Name = $"Border{index + 1}";
 			panel.MouseFilter = MouseFilterEnum.Ignore;
-			panel.Position = new Vector2(maxOffset - currentLayer.Offset, maxOffset - currentLayer.Offset);
+			panel.Position = shift + new Vector2(maxOffset - currentLayer.Offset, maxOffset - currentLayer.Offset);
 			panel.Size = element.Size + new Vector2(2.0f * currentLayer.Offset, 2.0f * currentLayer.Offset);
 			panel.AddThemeStyleboxOverride("panel", CreateBorderStyleBox(currentLayer.ColorValue, borderWidth));
 			yield return panel;

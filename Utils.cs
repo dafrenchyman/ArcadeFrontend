@@ -22,6 +22,33 @@ public class Utils
         return texture;
     }
 
+    public static ImageTexture? LoadImageFromBuffer(byte[] bytes, string assetName)
+    {
+        if (bytes == null || bytes.Length == 0)
+        {
+            GD.PrintErr($"Failed to load image from buffer: {assetName}, buffer was empty.");
+            return null;
+        }
+
+        string extension = Path.GetExtension(assetName).ToLowerInvariant();
+        var image = new Image();
+        Error err = extension switch
+        {
+            ".png" => image.LoadPngFromBuffer(bytes),
+            ".jpg" or ".jpeg" => image.LoadJpgFromBuffer(bytes),
+            ".webp" => image.LoadWebpFromBuffer(bytes),
+            _ => image.LoadPngFromBuffer(bytes),
+        };
+
+        if (err != Error.Ok)
+        {
+            GD.PrintErr($"Failed to load image buffer: {assetName}, Error: {err}");
+            return null;
+        }
+
+        return ImageTexture.CreateFromImage(image);
+    }
+
     public static string ResolvePath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))

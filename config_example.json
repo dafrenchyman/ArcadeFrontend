@@ -100,7 +100,7 @@
           "LogoLocation": "/ROMs/GameArtwork/Logos/Metal Slug X.png",
           "Theme": {
             "Type": "HyperSpin",
-            "Path": "themes/MetalSlugX/Theme.xml",
+            "Path": "themes/MetalSlugX.zip",
             "Video": "themes/MetalSlugX/video.ogv"
           },
           "LaunchCommand": "retroarch --fullscreen -L /lib/retroarch/cores/fbneo_libretro.so \"/ROMs/arcade/Metal Slug X.zip\""

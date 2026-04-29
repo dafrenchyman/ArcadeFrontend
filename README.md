@@ -17,9 +17,11 @@ ArcadeFrontend can now load a constrained subset of extracted HyperSpin themes d
 
 Supported first-pass compatibility:
 - `Theme.xml` plus sibling assets in the same folder
+- a `.zip` containing `Theme.xml` plus image assets loaded directly from the archive
 - `Background.png`
 - `Artwork1.png` through `Artwork4.png`
 - optional `video.ogv`, or a config-provided video override
+- optional `Video.png` overlay for the video region
 - centered coordinates authored in `1024x768`
 - non-uniform stretch to the active viewport to match HyperSpin's widescreen behavior
 - limited intro effects using `start`, `time`, `delay`, and `type`
@@ -42,6 +44,10 @@ Example config:
 ```
 
 For HyperSpin themes, `Theme.Video` is optional. If it is set, ArcadeFrontend uses that file for the theme's video region. If it is omitted, the loader falls back to `video.ogv` beside `Theme.xml`.
+
+If `Video.png` exists beside `Theme.xml`, ArcadeFrontend treats it as an overlay for the video region and applies `overlayoffsetx`, `overlayoffsety`, and `overlaybelow` from the `<video>` element.
+
+If `Theme.Path` points to a `.zip`, ArcadeFrontend reads `Theme.xml`, `Background.png`, and `Artwork*.png` directly from the archive without extracting them. Zip-backed themes do not read video from inside the archive; use `Theme.Video` for the external `.ogv` path if the theme has a video region.
 
 Existing packaged Godot themes using `ThemePck` and `ThemeFile` continue to work.
 
