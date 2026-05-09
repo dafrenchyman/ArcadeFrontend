@@ -1,0 +1,74 @@
+using System;
+using System.Collections.Generic;
+
+namespace ArcadeFrontend;
+
+public class MenuItemData
+{
+	public int index { get; set; }
+	public string? Name { get; set; }
+	public string? Description { get; set; }
+	public string? Poster { get; set; }
+	public string? LogoLocation { get; set; }
+	public ThemeDefinition? Theme { get; set; }
+	public string? ThemePck { get; set; }
+	public string? ThemeFile { get; set; }
+
+	public ItemInformationData ItemInformation { get; set; }
+	public string? LaunchCommand { get; set; }
+	public string? MenuType { get; set; }
+	public string? SystemId { get; set; }
+	public string? GameKey { get; set; }
+	public List<MenuItemData> Items { get; set; } = new();
+
+	public ThemeDefinition? GetResolvedTheme()
+	{
+		if (Theme != null && Theme.IsValid())
+		{
+			return Theme.Normalize();
+		}
+
+		if (!string.IsNullOrWhiteSpace(ThemePck) || !string.IsNullOrWhiteSpace(ThemeFile))
+		{
+			return new ThemeDefinition
+			{
+				Type = ThemeType.Godot,
+				Pck = ThemePck,
+				Path = ThemeFile,
+			};
+		}
+
+		return null;
+	}
+	
+	private static int Wrap(int index, int length) => ((index % length) + length) % length;
+    
+	public MenuItemData GetMenuItem(MenuPath path)
+	{
+		if (this.Items.Count == 0)
+			throw new InvalidOperationException("Menu is empty.");
+		if (path == null || path.Length == 0)
+			throw new ArgumentException("Path must contain at least one index.", nameof(path));
+
+		IList<MenuItemData> current = this.Items;
+		MenuItemData node = null;
+
+		for (int depth = 0; depth < path.Length; depth++)
+		{
+			if (current.Count == 0)
+				throw new InvalidOperationException($"Menu at depth {depth} is empty.");
+
+			int wrapped = Wrap(path[depth], current.Count);
+			node = current[wrapped];
+
+			if (depth < path.Length - 1)
+			{
+				if (node.Items == null)
+					throw new InvalidOperationException($"Node at depth {depth} has no children.");
+				current = node.Items;
+			}
+		}
+
+		return node;
+	}
+}

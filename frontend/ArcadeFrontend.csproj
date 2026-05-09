@@ -1,0 +1,26 @@
+<Project Sdk="Godot.NET.Sdk/4.4.1">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="BlurTest.tscn" />
+    <Content Include="config.json" />
+    <Content Include="config_example.json" />
+    <Content Include="convert_videos.sh" />
+    <Content Include="default.nix" />
+    <Content Include="nixos_runner.sh" />
+    <Content Include="red_test.gdshader" />
+    <Content Include="ui\default\Overlay\OverlayMenu.tscn" />
+    <Content Include="ui\default\Wheel\Wheel.tscn" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="inputs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="inputs\**" />
+  </ItemGroup>
+</Project>
